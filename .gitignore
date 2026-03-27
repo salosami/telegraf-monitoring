@@ -1,0 +1,22 @@
+# Environment variables with secrets
+.env
+.env.local
+.env.*.local
+
+# Docker volumes
+influxdb-data/
+influxdb-config/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
