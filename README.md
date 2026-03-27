@@ -61,7 +61,7 @@ Edit `.env` to change values.
 ### Telegraf Configuration
 - **Main config:** `telegraf.conf` — Agent settings and InfluxDB output
 - **Input plugins:** `docsis_cm.conf` — SNMP configuration
-  - Agent IP: `172.20.3.217:161` (edit if needed)
+   - Agent IP: `192.0.2.11:161` (example; replace with your modem IP)
   - Community: `public`
   - Polling interval: 30 seconds
 
@@ -138,7 +138,7 @@ docker exec influxdb influx query \
 
 **"Connection refused"**
 - Cable modem IP/port unreachable
-- Check: `ping 172.20.3.217` and `snmpwalk -v 2c -c public 172.20.3.217 .1`
+- Check: `ping <MODEM_IP>` and `snmpwalk -v 2c -c <COMMUNITY> <MODEM_IP> .1`
 
 ### InfluxDB exits with code 2
 
@@ -158,14 +158,14 @@ docker exec influxdb influx query \
 ```bash
 # InfluxDB Admin (for initial setup)
 INFLUXDB_ADMIN_USER=admin
-INFLUXDB_ADMIN_PASSWORD=changeme123
+INFLUXDB_ADMIN_PASSWORD=change-me-strong-password
 
 # InfluxDB Organization & Bucket
 INFLUXDB_ORG=docsis
 INFLUXDB_BUCKET=docsis
 
 # API Token (used by Telegraf)
-INFLUXDB_TOKEN=my-super-secret-token-changeme
+INFLUXDB_TOKEN=replace-with-long-random-token
 ```
 
 **⚠️ Change these in production!** Use strong passwords and secure token generation.
