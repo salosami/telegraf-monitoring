@@ -1,0 +1,90 @@
+--
+-- TELESTE-ETTH-MIB.mib
+-- *****************************************************************************
+-- Copyright (c) 2006 by:
+-- 
+-- Teleste Corporation
+-- Seponkatu 1
+-- FIN-20660 Littoinen, Finland
+-- tel. +358 2 2605 611
+-- url: http://www.teleste.com
+-- 
+-- Description: Ethernet to home (EttH) private MIB.
+-- 
+-- 
+-- ****************************************************************************
+-- 
+
+
+	TELESTE-ETTH-MIB DEFINITIONS ::= BEGIN
+ 
+		IMPORTS
+			OBJECT-TYPE			
+				FROM RFC-1212			
+			DisplayString			
+				FROM RFC1213-MIB			
+			etth, TPhysAddress		
+				FROM TELESTE-ROOT-MIB;
+			
+etthMIB MODULE-IDENTITY
+        LAST-UPDATED "200711200000Z" -- 
+        ORGANIZATION "Teleste Corporation"
+        CONTACT-INFO
+	        "Teleste Corporation
+             Seponkatu 1
+             FIN-20660 Littoinen, Finland
+             tel. +358 2 2605 611
+             url: http://www.teleste.com"
+		DESCRIPTION
+      		"Ethernet to home (EttH) private MIB." 
+      		
+      	REVISION        "200705160000Z"
+    	DESCRIPTION
+            "Initial Version of this MIB module."  
+            
+        REVISION        "200711200000Z"
+    	DESCRIPTION
+            "DHCP relay option added." 
+
+	::= { etth 1 }    
+    
+		etthBaseObjects OBJECT IDENTIFIER ::= { etthMIB 1 }  
+
+--
+-- etthDHCPDiscovery
+--                
+		etthDHCPDiscovery OBJECT-TYPE
+			SYNTAX INTEGER	
+				{
+				doDHCPDiscovery(1)
+				}		
+			ACCESS write-only
+			STATUS mandatory
+			DESCRIPTION
+				"Upon setting this value the system starts DHCP discovery."
+			::= { etthBaseObjects 1 } 
+			
+--
+-- etthDHCPRelay
+--                
+		etthDHCPRelay OBJECT-TYPE
+			SYNTAX INTEGER	
+				{
+				off(1),
+				on(2)
+				}		
+			ACCESS write-only
+			STATUS mandatory
+			DESCRIPTION
+				"Enables/disables dhcp snooping with option 82."
+			::= { etthBaseObjects 2 }
+
+   
+ 
+END
+--
+-- TELESTE-ETTH-MIB.mib
+--
+
+
+

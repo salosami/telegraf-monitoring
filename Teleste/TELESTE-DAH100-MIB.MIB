@@ -1,0 +1,339 @@
+--
+-- TELESTE-DAH100-MIB.mib
+-- *****************************************************************************
+-- Copyright (c) 2015-2016 by:
+-- 
+-- Teleste Corporation
+-- Seponkatu 1
+-- FIN-20660 Littoinen, Finland
+-- tel. +358 2 2605 611
+-- url: http://www.teleste.com
+-- 
+-- Description: Teleste DAH100 MIB
+-- 
+-- Revision History:
+-- -----------------
+-- 
+-- 2.2 2020-6-25 Juha Kangas
+-- fixed link to DAX mib => comment out line 'dah100		OBJECT IDENTIFIER ::= { dah 100 }'
+-- changed 'dah100FlapMacAddr' MAX-ACCESS not-accessible => read-only
+--
+-- 2.1 2016-11-08 Rainer Salminen
+-- - Added and rearranged notifications
+--
+-- 2.0 2016-10-04 Rainer Salminen
+-- - Restructured
+-- - Added notification variables and events
+-- - Arranged Revision History from latest to oldest
+--
+-- 1.3 2016-08-30 Rainer Salminen
+-- - Editorial: Unified indentation and date formats in Revision History changed to ISO8601 format
+-- - Added dah100FlapGroup
+--
+-- 1.2 25.9.2015 Perttu Fagerlund
+-- - Removed dax level from this MIB file
+-- - A separate TELESTE-DAX-MIB is now used as link between TELESTE-ROOT-MIB and TELESTE-DAH100-MIB
+--
+-- 1.1 2015-09-16 Perttu Fagerlund
+-- - Added dah100Fft for displaying upstream FFT information
+-- 
+-- 1.0 2015-03-20 Perttu Fagerlund
+-- - first release
+
+-- ****************************************************************************
+-- 
+    
+TELESTE-DAH100-MIB DEFINITIONS ::= BEGIN
+ 
+IMPORTS
+	NOTIFICATION-TYPE,
+	MODULE-IDENTITY,
+	OBJECT-TYPE,
+	Unsigned32,
+	Integer32,
+	Gauge32,
+	Counter32
+		FROM SNMPv2-SMI
+	TruthValue,
+	MacAddress,
+	RowStatus,
+	DateAndTime,
+	DisplayString,
+	TimeStamp,
+	StorageType,
+	TEXTUAL-CONVENTION
+		FROM SNMPv2-TC
+	dah100
+		FROM TELESTE-DAX-MIB;
+
+--
+--
+-- DAH100 MIB structure
+--
+-- teleste		OBJECT IDENTIFIER ::= { enterprises 3715 }
+-- dax			OBJECT IDENTIFIER ::= { teleste 12 }
+-- dah			OBJECT IDENTIFIER ::= { dax 100 }
+-- dah100		OBJECT IDENTIFIER ::= { dah 100 }
+dah100GenInfo	OBJECT IDENTIFIER ::= { dah100 1 }
+dah100ConfMngt	OBJECT IDENTIFIER ::= { dah100 2 }
+dah100Fft		OBJECT IDENTIFIER ::= { dah100 3 }
+dah100Flap		OBJECT IDENTIFIER ::= { dah100 4 }
+
+--
+--  Notifications
+--
+dah100Notifications			OBJECT IDENTIFIER ::= {dah100 9}
+dah100NotificationEvents	OBJECT IDENTIFIER ::= {dah100Notifications 0}
+dah100NotificationObjects	OBJECT IDENTIFIER ::= {dah100Notifications 1}
+
+
+
+-- *****************************************************
+-- dah100GenInfo (1.3.6.1.4.1.3715.12.100.100.1) objects
+-- *****************************************************
+
+dah100OperationalModemCount OBJECT-TYPE
+	SYNTAX INTEGER
+	ACCESS read-only
+	STATUS mandatory
+	DESCRIPTION
+		"The number of Cable modems currently connected to the DAH device in operational state"
+::= { dah100GenInfo 22 }
+
+
+-- ******************************************************
+-- dah100ConfMngt (1.3.6.1.4.1.3715.12.100.100.2) objects
+-- ******************************************************
+
+dah100SaveConfiguration OBJECT-TYPE
+	SYNTAX INTEGER
+	ACCESS read-write
+	STATUS mandatory
+	DESCRIPTION
+		"Writing 1 to this OID causes the DAH100 device to copy its running 
+		configuration to startup configuration at non-volatile storage.
+		Returns always 0 when read."
+	::= { dah100ConfMngt 1 }
+
+
+-- *************************************************
+-- dah100Fft (1.3.6.1.4.1.3715.12.100.100.3) objects
+-- *************************************************
+
+dah100FftSize OBJECT-TYPE
+	SYNTAX	INTEGER
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"The number of entries in the DAH100 FFT data. The data entries are located in the dah100FftDataTable."
+::= { dah100Fft 1 }
+
+dah100FftSampleSize OBJECT-TYPE
+	SYNTAX	INTEGER
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"The size in bytes of each entry in the dah100FftDataTable"
+::= { dah100Fft 2 }
+
+dah100FftFirstFreq OBJECT-TYPE
+	SYNTAX	INTEGER
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"The start frequency of the first sample in the dah100FftDataTable"
+::= { dah100Fft 3 }
+
+dah100FftLastFreq OBJECT-TYPE
+	SYNTAX	INTEGER
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"The start frequency of the last sample in the dah100FftDataTable"
+::= { dah100Fft 4 }
+
+Dah100FftDataType ::= TEXTUAL-CONVENTION
+	STATUS	current
+	DESCRIPTION
+		"A data entry containing FFT data"
+	SYNTAX	OCTET STRING (SIZE (0..256))
+
+dah100FftDataTable OBJECT-TYPE
+	SYNTAX		SEQUENCE OF Dah100FftDataEntry
+	MAX-ACCESS	not-accessible
+	STATUS		current
+	DESCRIPTION
+		"DAH100 upstream FFT display data table"
+::= { dah100Fft 10 }
+
+dah100FftDataEntry OBJECT-TYPE
+	SYNTAX		Dah100FftDataEntry
+	MAX-ACCESS	not-accessible
+	STATUS		current
+	DESCRIPTION
+		"DAH100 FFT Data Entry. Each entry is 256 data bytes which are to be interpreted 
+		as explained in dah100FftSize"
+	INDEX	{ dah100FftDataIndex }
+::= { dah100FftDataTable 1 }
+
+Dah100FftDataEntry ::= SEQUENCE {
+dah100FftDataIndex	Unsigned32,
+dah100FftData		Dah100FftDataType
+}
+
+dah100FftDataIndex OBJECT-TYPE
+	SYNTAX		Unsigned32 
+	MAX-ACCESS	not-accessible
+	STATUS	current
+	DESCRIPTION
+		"An index to the dah100FftDataTable"
+::=  { dah100FftDataEntry 1 }
+
+dah100FftData OBJECT-TYPE
+	SYNTAX		Dah100FftDataType 
+	MAX-ACCESS	read-only
+	STATUS		current
+	DESCRIPTION
+		"The FFT data as integer values in unit 1/100 dB (Most significant byte first)
+		Each entry is dah100FftSampleSize bytes wide. The entries are equally spaced over the frequency 
+		range from dah100FftFirstFreq to dah100FftLastFreq."
+::=  { dah100FftDataEntry 2 }
+
+
+-- **************************************************
+-- DAH100Flap (1.3.6.1.4.1.3715.12.100.100.4) objects
+-- **************************************************
+
+dah100FlapTable OBJECT-TYPE
+	SYNTAX		SEQUENCE OF Dah100FlapEntry
+	MAX-ACCESS	not-accessible
+	STATUS		current
+	DESCRIPTION
+		"DAH100 cable modem flap table"
+::= { dah100Flap 1 }
+
+dah100FlapEntry OBJECT-TYPE
+	SYNTAX		Dah100FlapEntry
+	MAX-ACCESS	not-accessible
+	STATUS		current
+	DESCRIPTION
+		"DAH100 Flap Entry contains flap counter of each modem.
+		Only modems with counter > 0 are shown"
+	INDEX	{ IMPLIED dah100FlapMacAddr }
+::= { dah100FlapTable 1 }
+
+Dah100FlapEntry ::= SEQUENCE {
+	dah100FlapMacAddr		MacAddress,
+	dah100FlapDropCount		Unsigned32,
+	dah100FlapLastDropTime	DateAndTime
+}
+
+dah100FlapMacAddr OBJECT-TYPE
+	SYNTAX		MacAddress
+	MAX-ACCESS	read-only
+	STATUS		current
+	DESCRIPTION
+		"MAC address of the cable modem." 
+::= { dah100FlapEntry 1 }
+
+dah100FlapDropCount OBJECT-TYPE
+	SYNTAX		Unsigned32
+	MAX-ACCESS	read-only
+	STATUS		current
+	DESCRIPTION
+		"Drop count of the cable modem since the last reset of the counters
+		Note: only values > 0 are shown." 
+::= { dah100FlapEntry 2 }
+
+dah100FlapLastDropTime OBJECT-TYPE
+	SYNTAX		DateAndTime
+	MAX-ACCESS	read-only
+	STATUS		current
+	DESCRIPTION
+		"Last drop time" 
+::= { dah100FlapEntry 3 }
+
+--
+-- *** Control objects for dah100FlapTable ***
+--
+
+dah100ClearFlapTable OBJECT-TYPE
+	SYNTAX		TruthValue
+	MAX-ACCESS	read-write
+	STATUS		current
+	DESCRIPTION
+		"Setting this object to true(1) clears  dah100FlapTable from entries.
+		Reading this object always returns false(2)." 
+::= { dah100Flap 2 }
+
+dah100FlapLastClearTime OBJECT-TYPE
+	SYNTAX		DateAndTime
+	MAX-ACCESS	read-only
+	STATUS		current
+	DESCRIPTION
+		"Last time of dah100ClearFlapTable.
+		All zeroes mean that table has been cleared on device boot" 
+::= { dah100Flap 3 }
+
+
+-- **********************************************************
+-- dah100NotificationEvents (1.3.6.1.4.1.3715.12.100.100.9.0)
+-- **********************************************************
+
+--
+--	Notifications relating to the basic operation of 
+--	the DAH100 SNMP agent
+--
+
+dah100SnmpAgentStart NOTIFICATION-TYPE
+	STATUS	current
+	DESCRIPTION
+		"An indication that the DAH100 SNMP agent 
+		has started running."
+::= { dah100NotificationEvents 1 }
+
+dah100SnmpAgentShutdown NOTIFICATION-TYPE
+	STATUS current
+	DESCRIPTION
+		"An indication that the DAH100 SNMP agent 
+		is in the process of being shut down."
+::= { dah100NotificationEvents 2 }
+
+dah100SnmpAgentRestart NOTIFICATION-TYPE
+	STATUS	current
+	DESCRIPTION
+		"An indication that the DAH100 SNMP agent has been restarted.
+		This does not imply anything about whether the configuration has
+		changed or not (unlike the standard coldStart or warmStart traps)"
+::= { dah100NotificationEvents 3 }
+
+--
+-- DAH100 event notifications
+--
+
+dah100LogEvent NOTIFICATION-TYPE
+	OBJECTS	{ dah100LogString }
+	STATUS	current
+	DESCRIPTION
+		"DAH100 log event notification.
+		Event is received if trap sending for the event is enabled in DAH100.
+		Supported from DAH application v3.1.18 or later"
+::= { dah100NotificationEvents 4 }
+
+
+-- ***********************************************************
+-- dah100NotificationObjects (1.3.6.1.4.1.3715.12.100.100.9.1)
+-- ***********************************************************
+
+dah100LogString OBJECT-TYPE
+	SYNTAX		DisplayString
+	MAX-ACCESS	accessible-for-notify
+	STATUS		current
+	DESCRIPTION
+		"String in Syslog RFC5424 compliant format (including header)"
+::= { dah100NotificationObjects 1 }
+
+END
+--
+-- TELESTE-DAH100-MIB.mib
+--

@@ -1,0 +1,1360 @@
+--
+-- TELESTE-ETTH-VF-100-MIB.mib
+-- *****************************************************************************
+-- Copyright (c) 2006 by:
+-- 
+-- Teleste Corporation
+-- Seponkatu 1
+-- FIN-20660 Littoinen, Finland
+-- tel. +358 2 2605 611
+-- url: http://www.teleste.com
+-- 
+-- Description: Virtual Fibre 100Mb/s (VF-100) devices private MIB.
+-- 
+-- 
+-- ****************************************************************************
+-- 
+    
+	TELESTE-ETTH-VF-100-MIB DEFINITIONS ::= BEGIN
+ 
+		IMPORTS
+			OBJECT-TYPE			
+				FROM RFC-1212			
+			DisplayString			
+				FROM RFC1213-MIB			
+			TPhysAddress		
+				FROM TELESTE-ROOT-MIB   
+			etthMIB
+				FROM TELESTE-ETTH-MIB
+			RowStatus,    
+			TimeStamp
+			    FROM SNMPv2-TC 	
+			;  
+			
+etthVF100MIB MODULE-IDENTITY
+        LAST-UPDATED "200711060000Z" -- 
+        ORGANIZATION "Teleste Corporation"
+        CONTACT-INFO
+	        "Teleste Corporation
+             Seponkatu 1
+             FIN-20660 Littoinen, Finland
+             tel. +358 2 2605 611
+             url: http://www.teleste.com"
+		DESCRIPTION
+      		"Virtual Fibre 100Mb/s (VF-100) devices private MIB." 
+      	REVISION        "200704270000Z"
+    	DESCRIPTION
+            "Initial Version of this MIB module."     		
+    	REVISION        "200706250000Z"
+    	DESCRIPTION
+            "DHCP discovery trigger added."    
+        REVISION        "200710190000Z"
+    	DESCRIPTION
+            "Second downstream snr value added."    
+        REVISION        "200711060000Z"
+    	DESCRIPTION
+            "Mac limit state added for EAM." 
+		::= { etthMIB 41 }   
+	
+
+		etthVF100BaseObjects OBJECT IDENTIFIER ::= { etthVF100MIB 1 } 
+		etthVF100EAMSettingsObjects OBJECT IDENTIFIER ::= { etthVF100MIB 10 }
+		etthVF100ENMModemObjects OBJECT IDENTIFIER ::= { etthVF100MIB 20 }   
+		etthVF100ENMSettingsObjects OBJECT IDENTIFIER ::= { etthVF100MIB 30 }     
+		       
+TenthDecimal ::= TEXTUAL-CONVENTION
+    DISPLAY-HINT  "d-1"
+    STATUS        current
+    DESCRIPTION
+        "0.1"
+    SYNTAX        INTEGER
+        
+-- 
+-- This table contains cable interface speed counters.
+-- 
+		etthCableIfSpeedTable OBJECT-TYPE
+			SYNTAX SEQUENCE OF EtthCableIfSpeedEntry
+			ACCESS not-accessible
+			STATUS mandatory
+			DESCRIPTION
+				"This table describes speed and status counters of RF cable interfaces."
+			::= { etthVF100BaseObjects 2 }
+-- 
+-- A table of cable interface speed objects.
+-- 
+		etthCableIfSpeedEntry OBJECT-TYPE
+			SYNTAX EtthCableIfSpeedEntry
+			ACCESS not-accessible
+			STATUS mandatory
+			DESCRIPTION
+				"Describes speed and status counters of a single RF cable interface."
+			INDEX { etthCIfSpeedIfIndex }
+			::= { etthCableIfSpeedTable 1 }
+
+		
+		EtthCableIfSpeedEntry ::=
+			SEQUENCE {
+				etthCIfSpeedIfIndex 
+					INTEGER, 
+				etthCIfSpeedBPSDown 
+					INTEGER, 
+				etthCIfSpeedBPSUp 
+					INTEGER, 
+				etthCIfSpeedPPSDown 
+					INTEGER,
+                etthCIfSpeedPPSUp 
+					INTEGER,
+                etthCIfSpeedEPSDown 
+					INTEGER,
+                etthCIfSpeedEPSUp 
+					INTEGER,
+				etthCIfSpeedUtilDown 
+					INTEGER,
+				etthCIfSpeedUtilUp 
+					INTEGER		
+			 }  
+              	 
+		etthCIfSpeedIfIndex OBJECT-TYPE
+			SYNTAX INTEGER
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"A unique interface index. Same as ifTable.ifIndex."
+			::= { etthCableIfSpeedEntry 1 }  
+				 
+		etthCIfSpeedBPSDown OBJECT-TYPE
+			SYNTAX INTEGER    			
+			UNITS "bits per second"
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"Cable interface downstream speed counter."
+			::= { etthCableIfSpeedEntry 2 }  
+				 
+		etthCIfSpeedBPSUp OBJECT-TYPE
+			SYNTAX INTEGER 
+			UNITS "bits per second"
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"Cable interface upstream speed counter."
+			::= { etthCableIfSpeedEntry 3 }  
+				 
+		etthCIfSpeedPPSDown OBJECT-TYPE
+			SYNTAX INTEGER 
+			UNITS "packets per second"
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"Cable interface downstream packet counter."
+			::= { etthCableIfSpeedEntry 4 } 
+				 
+		etthCIfSpeedPPSUp OBJECT-TYPE
+			SYNTAX INTEGER 
+			UNITS "packets per second"
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"Cable interface upstream packet counter."
+			::= { etthCableIfSpeedEntry 5 } 
+				 
+		etthCIfSpeedEPSDown OBJECT-TYPE
+			SYNTAX INTEGER  
+			UNITS "errors per second"
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"Cable interface downstream error counter."
+			::= { etthCableIfSpeedEntry 6 } 
+				 
+		etthCIfSpeedEPSUp OBJECT-TYPE
+			SYNTAX INTEGER 
+			UNITS "errors per second"
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"Cable interface upstream error counter."
+			::= { etthCableIfSpeedEntry 7 } 
+				 
+		etthCIfSpeedUtilDown OBJECT-TYPE
+			SYNTAX INTEGER
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"Cable interface downstream utilisation percentage."
+			::= { etthCableIfSpeedEntry 8 }  
+				 
+		etthCIfSpeedUtilUp OBJECT-TYPE
+			SYNTAX INTEGER
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"Cable interface upstream utilisation percentage."
+			::= { etthCableIfSpeedEntry 9 }
+                          
+        
+--
+-- etthEAMSettingsTable
+--           
+		etthEAMSettingsTable OBJECT-TYPE
+			SYNTAX SEQUENCE OF EtthEAMSettingsEntry
+			ACCESS not-accessible
+			STATUS mandatory
+			DESCRIPTION
+				"This table contains settings entries for etth EAMs."
+			::= { etthVF100EAMSettingsObjects 1 }
+
+		etthEAMSettingsEntry OBJECT-TYPE
+			SYNTAX EtthEAMSettingsEntry
+			ACCESS not-accessible
+			STATUS mandatory    
+			DESCRIPTION
+				"An entry containing settings objects for a single EAM."
+			INDEX { etthEAMSetIndex }
+			::= { etthEAMSettingsTable 1 }
+
+
+		EtthEAMSettingsEntry ::=
+			SEQUENCE { 
+				etthEAMSetIndex
+					INTEGER, 
+				etthEAMSetDSRaster1
+					INTEGER,
+				etthEAMSetDSChannelWidth1
+					INTEGER,
+				etthEAMSetDSRaster2
+					INTEGER,
+				etthEAMSetDSChannelWidth2
+					INTEGER, 
+				etthEAMSetDSStartFrequency1
+					INTEGER,
+				etthEAMSetDSStartFrequency2
+					INTEGER,
+				etthEAMSetRateLimitBucketSize
+					INTEGER,
+				etthEAMSetDSLowestFrequency1
+					INTEGER,
+				etthEAMSetDSHighestFrequency1
+					INTEGER,  
+				etthEAMSetDSLowestFrequency2
+					INTEGER,
+				etthEAMSetDSHighestFrequency2
+					INTEGER,
+				etthEAMSetUSTcpUdpFiltering
+					DisplayString,
+				etthEAMSetUSEthernetTypeFiltering
+					DisplayString		
+			 }   
+			 
+		etthEAMSetIndex OBJECT-TYPE
+			SYNTAX INTEGER	
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"The value of this object uniquely identifies this entry."
+			::= { etthEAMSettingsEntry 1 } 
+			
+		etthEAMSetDSRaster1  OBJECT-TYPE
+			SYNTAX INTEGER
+			UNITS "hertz"	
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"The downstream frequency scan step 1."
+			::= { etthEAMSettingsEntry 2 }  
+			
+		etthEAMSetDSChannelWidth1  OBJECT-TYPE
+			SYNTAX INTEGER
+			UNITS "hertz"	
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"The downstream frequency scan channel width 1."
+			::= { etthEAMSettingsEntry 3 } 
+			
+		etthEAMSetDSRaster2  OBJECT-TYPE
+			SYNTAX INTEGER
+			UNITS "hertz"	
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"The downstream frequency scan step 2."
+			::= { etthEAMSettingsEntry 4 }  
+			                                
+		etthEAMSetDSChannelWidth2  OBJECT-TYPE
+			SYNTAX INTEGER
+			UNITS "hertz"	
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"The downstream frequency scan channel width 2."
+			::= { etthEAMSettingsEntry 5 } 
+			
+		etthEAMSetDSStartFrequency1  OBJECT-TYPE
+			SYNTAX INTEGER	
+			UNITS "hertz"
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"The downstream frequency scan start base frequency 1."
+			::= { etthEAMSettingsEntry 6 } 
+			
+		etthEAMSetDSStartFrequency2  OBJECT-TYPE
+			SYNTAX INTEGER
+			UNITS "hertz"	
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"The downstream frequency scan start base frequency 2."
+			::= { etthEAMSettingsEntry 7 }   
+			
+		etthEAMSetRateLimitBucketSize OBJECT-TYPE
+			SYNTAX INTEGER	
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"Rate limit bucket size."
+			::= { etthEAMSettingsEntry 8 }  
+			
+		etthEAMSetDSLowestFrequency1  OBJECT-TYPE
+			SYNTAX INTEGER
+			UNITS "hertz"	
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"The downstream frequency scan lowest frequency 1."
+			::= { etthEAMSettingsEntry 9 } 
+			
+		etthEAMSetDSHighestFrequency1  OBJECT-TYPE
+			SYNTAX INTEGER
+			UNITS "hertz"	
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"The downstream frequency scan highest frequency 1."
+			::= { etthEAMSettingsEntry 10 } 
+			
+		etthEAMSetDSLowestFrequency2  OBJECT-TYPE
+			SYNTAX INTEGER
+			UNITS "hertz"	
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"The downstream frequency scan lowest frequency 2."
+			::= { etthEAMSettingsEntry 11 } 
+			
+		etthEAMSetDSHighestFrequency2  OBJECT-TYPE
+			SYNTAX INTEGER	
+			UNITS "hertz"
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"The downstream frequency scan highest frequency 2."
+			::= { etthEAMSettingsEntry 12 }
+			
+		etthEAMSetUSTcpUdpFiltering  OBJECT-TYPE
+			SYNTAX DisplayString	
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"Upstream TCP/UDP filtering.
+				
+				A semicolon separated set of 1-4 port values. Empty value means the setting is disabled."
+			::= { etthEAMSettingsEntry 13 }
+
+		etthEAMSetUSEthernetTypeFiltering  OBJECT-TYPE
+			SYNTAX DisplayString	
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"Upstream ethernet type filtering. 
+				
+				A single type value."
+			::= { etthEAMSettingsEntry 14 }
+			
+			
+    
+--
+-- etthEAMDownstreamSettingsTable
+--             
+    	etthEAMDownstreamSettingsTable OBJECT-TYPE
+			SYNTAX SEQUENCE OF EtthEAMDownstreamSettingsEntry
+			ACCESS not-accessible
+			STATUS mandatory
+			DESCRIPTION
+				"This table contains downstream settings entries for etth EAMs."
+			::= { etthVF100EAMSettingsObjects 2 }
+
+
+		etthEAMDownstreamSettingsEntry OBJECT-TYPE
+			SYNTAX EtthEAMDownstreamSettingsEntry
+			ACCESS not-accessible
+			STATUS mandatory    
+			DESCRIPTION
+				"A single downstream settings entry for etth EAMs."
+			INDEX { etthEAMDSSetIndex }
+			::= { etthEAMDownstreamSettingsTable 1 }
+
+
+		EtthEAMDownstreamSettingsEntry ::=
+			SEQUENCE { 
+				etthEAMDSSetIndex
+					INTEGER, 
+				etthEAMDSSetFrequency1
+					INTEGER,  
+				etthEAMDSSetFrequency2
+					INTEGER,
+				etthEAMDSSetChannelWidth
+					INTEGER,
+				etthEAMDSSetModulation
+					INTEGER,
+				etthEAMDSSetRowStatus
+					RowStatus
+			 }   
+			 
+		etthEAMDSSetIndex OBJECT-TYPE
+			SYNTAX INTEGER	
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"The value of this object uniquely identifies this entry."
+
+			::= { etthEAMDownstreamSettingsEntry 1 }  
+			
+		etthEAMDSSetFrequency1 OBJECT-TYPE
+			SYNTAX INTEGER	
+			UNITS "hertz"
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"Preset downstream searching frequency 1."
+
+			::= { etthEAMDownstreamSettingsEntry 2 } 
+			
+		etthEAMDSSetFrequency2 OBJECT-TYPE
+			SYNTAX INTEGER	
+			UNITS "hertz"
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"Preset downstream searching frequency 2."
+
+			::= { etthEAMDownstreamSettingsEntry 3 }   
+			
+		etthEAMDSSetChannelWidth OBJECT-TYPE
+			SYNTAX INTEGER
+			UNITS "hertz"	
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"Preset downstream channel width."
+
+			::= { etthEAMDownstreamSettingsEntry 4 }   			
+			
+		etthEAMDSSetModulation OBJECT-TYPE
+			SYNTAX INTEGER	
+			{
+				qam64(1),
+				qam128(2),
+				qam256(3),
+				other(254),
+				unknown(255)
+			}
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"Preset downstream channel modulation."
+
+			::= { etthEAMDownstreamSettingsEntry 5 }
+			
+		etthEAMDSSetRowStatus OBJECT-TYPE
+			SYNTAX RowStatus
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"Status of this downstream settings entry.
+				
+				When an entry contains valid downstream parameter set the status is 'active'. Empty
+				entry has value 'notInService'.
+				
+				How to add a new entry:
+				1) Select an empty row
+				2) Set frequency, channel width and modulation. When a new entry is beign edited it's status is 'notReady'.
+				3) Set status field to 'createAndGo'
+				
+				To remove an entry or cancel addition set status to 'destroy'."
+
+			::= { etthEAMDownstreamSettingsEntry 6 }   
+		      
+		      
+--
+-- etthEAMSwitchingMode
+-- 
+		etthEAMSwitchingMode OBJECT-TYPE
+			SYNTAX INTEGER
+				{
+				automatic(1),
+				disabled(2),
+				enhanced_portbased(3)
+				} 
+				
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"EAM Switching mode."
+			::= { etthVF100EAMSettingsObjects 3 }   
+			
+			
+--
+-- etthEAMMacLimitState
+-- 
+		etthEAMMacLimitState OBJECT-TYPE
+			SYNTAX INTEGER
+				{
+				off(1),
+				on(2)
+				}
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"Turns EAM Mac limiting on/off."
+			::= { etthVF100EAMSettingsObjects 4 }
+
+
+	
+--			etthEAMDSSetChannelWidth OBJECT-TYPE
+--			SYNTAX INTEGER
+--			UNITS "hertz"	
+--			ACCESS read-write
+--			STATUS mandatory
+--			DESCRIPTION
+--				"Preset downstream channel width."
+
+--			::= { etthEAMDownstreamSettingsEntry 4 }      
+			
+			
+
+			
+             
+--
+-- etthEAMRateLimitSettingsTable
+--           
+--		etthEAMRateLimitSettingsTable OBJECT-TYPE
+--			SYNTAX SEQUENCE OF EtthEAMRateLimitSettingsEntry
+--			ACCESS not-accessible
+--			STATUS mandatory
+--			DESCRIPTION
+--				"This table contains entries for limiting EAM's ethernet interfaces' upstream and downstream rates."
+--			::= { etthVF100EAMSettingsObjects 3 }
+
+--		etthEAMRateLimitSettingsEntry OBJECT-TYPE
+--			SYNTAX EtthEAMRateLimitSettingsEntry
+--			ACCESS not-accessible
+--			STATUS mandatory    
+--			DESCRIPTION
+--				"Describes objects for limiting upstream and downstream rate of a single EAM ethernet interface."
+--			INDEX { etthClientIf }
+--			::= { etthEAMRateLimitSettingsTable 1 }
+
+
+--		EtthEAMRateLimitSettingsEntry ::=
+--			SEQUENCE { 
+--				etthEAMRLDownstreamRate
+--					INTEGER, 
+--				etthEAMRLUpstreamRate
+--					INTEGER
+--			 }   
+			  			
+--		etthEAMRLDownstreamRate OBJECT-TYPE
+--			SYNTAX INTEGER	 
+--			UNITS "kbits per second"
+--			ACCESS read-write
+--			STATUS mandatory
+--			DESCRIPTION
+--				"Maximum allowed downstream rate. Zero value means no rate limit."
+--			::= { etthEAMRateLimitSettingsEntry 3 } 
+			
+--		etthEAMRLUpstreamRate OBJECT-TYPE
+--			SYNTAX INTEGER	 
+--			UNITS "kbits per second"
+--			ACCESS read-write
+--			STATUS mandatory
+--			DESCRIPTION
+--				"Maximum allowed upstream rate. Zero value means no rate limit."
+--			::= { etthEAMRateLimitSettingsEntry 4 } 
+
+			
+			
+			
+
+-- 
+-- This table contains cable modem summary information.
+-- 		
+		etthENMModemSummaryTable OBJECT-TYPE
+			SYNTAX SEQUENCE OF EtthENMModemSummaryEntry
+			ACCESS not-accessible
+			STATUS mandatory
+			DESCRIPTION
+				"This table contains EAM summary information."
+			::= { etthVF100ENMModemObjects 1 }
+-- 
+-- This table contains cable modem summary information.
+-- 		
+		etthENMModemSummaryEntry OBJECT-TYPE
+			SYNTAX EtthENMModemSummaryEntry
+			ACCESS not-accessible
+			STATUS mandatory
+			DESCRIPTION
+				"An entry containing EAM summary information."
+			INDEX { etthENMModemSummaryIndex  }
+			::= { etthENMModemSummaryTable 1 }
+		
+ 		EtthENMModemSummaryEntry ::=
+			SEQUENCE {
+				etthENMModemSummaryIndex  
+					INTEGER, 
+				etthENMModemSummaryTotalEAMs  
+					INTEGER, 
+				etthENMModemSummaryOnlineEAMs  
+					INTEGER,
+				etthENMModemSummaryOfflineEAMs 
+					INTEGER		
+			 }  
+			 
+		etthENMModemSummaryIndex OBJECT-TYPE
+			SYNTAX INTEGER
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"An unique identifier of this entry."
+			::= { etthENMModemSummaryEntry 1 }  
+				 
+		etthENMModemSummaryTotalEAMs OBJECT-TYPE
+			SYNTAX INTEGER
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"Total amount of configured EAMs."
+			::= { etthENMModemSummaryEntry 2 }  
+				 
+		etthENMModemSummaryOnlineEAMs OBJECT-TYPE
+			SYNTAX INTEGER
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"Amount of configured EAMs online."
+			::= { etthENMModemSummaryEntry 3 }  
+				 
+		etthENMModemSummaryOfflineEAMs OBJECT-TYPE
+			SYNTAX INTEGER
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"Amount of configured EAMs offline."
+			::= { etthENMModemSummaryEntry 4 } 
+
+
+			  
+-- 
+-- This table contains modem status objects for ENM
+-- instances.
+-- 
+		etthENMModemTable OBJECT-TYPE
+			SYNTAX SEQUENCE OF EtthENMModemEntry
+			ACCESS not-accessible
+			STATUS mandatory
+			DESCRIPTION
+				"This table contains status objects for all EAMs connected to ENM."
+			::= { etthVF100ENMModemObjects 2 }
+-- 
+-- A table of modem status objects for ENM devices.
+-- 
+		etthENMModemEntry OBJECT-TYPE
+			SYNTAX EtthENMModemEntry
+			ACCESS not-accessible
+			STATUS mandatory
+			DESCRIPTION
+				"An entry containing status objects for a single EAM."
+			INDEX { etthENMModemIndex }
+			::= { etthENMModemTable 1 }
+		
+		EtthENMModemEntry ::=
+			SEQUENCE { 
+				etthENMModemIndex
+					INTEGER,
+				etthENMModemHostname
+					DisplayString,
+				etthENMModemIPAddress
+					DisplayString, 
+				etthENMModemMACAddress
+					DisplayString,
+				etthENMModemLinkStatus
+					DisplayString,    
+				etthENMModemCpes
+					INTEGER,
+			 }   
+			 
+		etthENMModemIndex OBJECT-TYPE
+			SYNTAX INTEGER
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"The value of this object uniquely identifies this entry."
+			::= { etthENMModemEntry 1 } 
+               
+		etthENMModemHostname OBJECT-TYPE
+			SYNTAX DisplayString
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"Hostname of the modem."
+			::= { etthENMModemEntry 2 }   
+		
+		etthENMModemIPAddress OBJECT-TYPE
+			SYNTAX DisplayString
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"IP address of the modem."
+			::= { etthENMModemEntry 3 }
+			  
+		etthENMModemMACAddress OBJECT-TYPE
+			SYNTAX TPhysAddress
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"MAC address of the modem."
+			::= { etthENMModemEntry 4 }
+      			
+		etthENMModemLinkStatus OBJECT-TYPE
+			SYNTAX DisplayString
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"Link status of the modem."
+			::= { etthENMModemEntry 5 }   
+			
+		etthENMModemCpes OBJECT-TYPE
+			SYNTAX INTEGER
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"Number of CPEs connected to the modem."
+			::= { etthENMModemEntry 6 } 
+			
+
+
+      
+-- 
+-- This table contains modem CPE status objects for ENM
+-- instances.
+-- 
+		etthENMModemCpeTable OBJECT-TYPE
+			SYNTAX SEQUENCE OF EtthENMModemCpeEntry
+			ACCESS not-accessible
+			STATUS mandatory
+			DESCRIPTION
+				"This table contains CPE status objects for all CPEs connected to ENM via EAMs."
+			::= { etthVF100ENMModemObjects 3 }
+-- 
+-- A table of modem Cpe status objects for ENM devices.
+-- 
+		etthENMModemCpeEntry OBJECT-TYPE
+			SYNTAX EtthENMModemCpeEntry
+			ACCESS not-accessible
+			STATUS mandatory
+			DESCRIPTION
+				"An entry containing CPE status objects for a single CPE."
+			INDEX { etthENMModemCpeIndex }
+			::= { etthENMModemCpeTable 1 }
+
+		
+		EtthENMModemCpeEntry ::=
+			SEQUENCE {
+				etthENMModemCpeIndex
+					INTEGER, 
+				etthENMModemCpeEAMHostname
+					DisplayString,  
+				etthENMModemCpeEAMIPAddress
+					DisplayString,
+				etthENMModemCpeEAMInterface
+					DisplayString,   
+				etthENMModemCpeActive
+					INTEGER,
+				etthENMModemCpeMACAddress
+					TPhysAddress,
+				etthENMModemCpeIPAddress
+					DisplayString,
+				etthENMModemCpeDHCPLease
+					TimeStamp
+			 }
+			 
+		etthENMModemCpeIndex OBJECT-TYPE
+			SYNTAX INTEGER
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"The value of this object uniquely identifies this entry."
+			::= { etthENMModemCpeEntry 1 } 
+			
+		
+		etthENMModemCpeEAMHostname OBJECT-TYPE
+			SYNTAX DisplayString
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"Hostname of the EAM."
+			::= { etthENMModemCpeEntry 2 } 
+			
+		etthENMModemCpeEAMIPAddress OBJECT-TYPE
+			SYNTAX DisplayString
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"IP address of the EAM."
+			::= { etthENMModemCpeEntry 3 } 
+			
+		
+		etthENMModemCpeEAMInterface OBJECT-TYPE
+			SYNTAX DisplayString
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"EAM's interface where the CPE is connected."
+			::= { etthENMModemCpeEntry 4 }   
+			
+		etthENMModemCpeActive OBJECT-TYPE
+			SYNTAX INTEGER  
+			{     
+				no(0),
+				yes(1)
+			}			
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"Determines if the CPE is active."
+			::= { etthENMModemCpeEntry 5 }
+					
+		etthENMModemCpeMACAddress OBJECT-TYPE
+			SYNTAX TPhysAddress
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"MAC address of the CPE."
+			::= { etthENMModemCpeEntry 6 }
+					
+		etthENMModemCpeIPAddress OBJECT-TYPE
+			SYNTAX DisplayString
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"IP address of the CPE."
+			::= { etthENMModemCpeEntry 7 } 
+			
+		etthENMModemCpeDHCPLease OBJECT-TYPE
+			SYNTAX TimeStamp 
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"DHCP lease for EAM IP address. Value shows time left before the lease expires."
+			::= { etthENMModemCpeEntry 8 }  
+    
+        
+        
+-- 
+-- This table contains modem PHY status objects for ENM
+-- instances.
+-- 
+		etthENMModemPhyTable OBJECT-TYPE
+			SYNTAX SEQUENCE OF EtthENMModemPhyEntry
+			ACCESS not-accessible
+			STATUS mandatory
+			DESCRIPTION
+				"This table contains PHY status objects for all configured EAMs connected to ENM."
+			::= { etthVF100ENMModemObjects 4 }
+-- 
+-- A table of modem PHY status objects for ENM devices.
+-- 
+		etthENMModemPhyEntry OBJECT-TYPE
+			SYNTAX EtthENMModemPhyEntry
+			ACCESS not-accessible
+			STATUS mandatory
+			DESCRIPTION
+				"An entry containing PHY status objects for a single EAM."
+			INDEX { etthENMModemPhyIndex }
+			::= { etthENMModemPhyTable 1 }
+
+		
+		EtthENMModemPhyEntry ::=
+			SEQUENCE {
+				etthENMModemPhyIndex
+					INTEGER,  
+				etthENMModemPhyMACAddress
+					DisplayString,
+				etthENMModemPhyUSTxPower
+					TenthDecimal,
+				etthENMModemPhyUSRxPower
+					TenthDecimal,  
+				etthENMModemPhyDSRxPower
+					TenthDecimal,
+				etthENMModemPhyUSSnr1
+					TenthDecimal, 
+				etthENMModemPhyUSSnr2
+					TenthDecimal, 
+				etthENMModemPhyDSSnr1
+					TenthDecimal,
+				etthENMModemPhyDSSnr2
+					TenthDecimal,
+				etthENMModemPhyUSBer1
+					TenthDecimal, 
+				etthENMModemPhyUSBer2
+					TenthDecimal,  
+				etthENMModemPhyDSBer1
+					TenthDecimal,  
+				etthENMModemPhyDSBer2
+					TenthDecimal
+			}                          
+			 
+        etthENMModemPhyIndex OBJECT-TYPE
+			SYNTAX INTEGER
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"The value of this object uniquely identifies this entry."
+			::= { etthENMModemPhyEntry 1 } 
+			      
+		
+		etthENMModemPhyMACAddress OBJECT-TYPE
+			SYNTAX TPhysAddress
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"MAC address of the EAM."
+			::= { etthENMModemPhyEntry 2 }  
+			
+		
+		etthENMModemPhyUSTxPower OBJECT-TYPE
+			SYNTAX TenthDecimal    
+			UNITS "dBmV"
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"The upstream transmit power."
+			::= { etthENMModemPhyEntry 3 } 
+					
+		etthENMModemPhyUSRxPower OBJECT-TYPE
+			SYNTAX TenthDecimal  
+			UNITS "dBmV"
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"The upstream receive power."
+			::= { etthENMModemPhyEntry 4 }  
+			
+		etthENMModemPhyDSRxPower OBJECT-TYPE
+			SYNTAX TenthDecimal    
+			UNITS "dBmV"
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"The downstream receive power."
+			::= { etthENMModemPhyEntry 5 }
+		
+		etthENMModemPhyUSSnr1 OBJECT-TYPE
+			SYNTAX TenthDecimal 
+			UNITS "dB"
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"The upstream Signal/Noise ratio 1."
+			::= { etthENMModemPhyEntry 6 } 
+			 
+		etthENMModemPhyUSSnr2 OBJECT-TYPE
+			SYNTAX TenthDecimal 
+			UNITS "dB"
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"The upstream Signal/Noise ratio 2."
+			::= { etthENMModemPhyEntry 7 } 
+					  			
+		etthENMModemPhyDSSnr1 OBJECT-TYPE
+			SYNTAX TenthDecimal  
+			UNITS "dB"
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"The downstream Signal/Noise ratio 1."
+			::= { etthENMModemPhyEntry 8 }  
+			 
+		etthENMModemPhyDSSnr2 OBJECT-TYPE
+			SYNTAX TenthDecimal  
+			UNITS "dB"
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"The downstream Signal/Noise ratio 2."
+			::= { etthENMModemPhyEntry 9 } 
+			
+		etthENMModemPhyUSBer1 OBJECT-TYPE
+			SYNTAX TenthDecimal 
+			UNITS ""
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"The upstream BER 1."
+			::= { etthENMModemPhyEntry 10 } 
+			 
+		etthENMModemPhyUSBer2 OBJECT-TYPE
+			SYNTAX TenthDecimal 
+			UNITS ""
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"The upstream BER 2."
+			::= { etthENMModemPhyEntry 11 }  
+			
+		 etthENMModemPhyDSBer1 OBJECT-TYPE
+			SYNTAX TenthDecimal 
+			UNITS ""
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"The downstream BER 1."
+			::= { etthENMModemPhyEntry 12 } 
+			 
+		etthENMModemPhyDSBer2 OBJECT-TYPE
+			SYNTAX TenthDecimal 
+			UNITS ""
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"The downstream BER 2."
+			::= { etthENMModemPhyEntry 13 } 
+  
+    
+--
+-- etthENMModemResetTable
+--           
+		etthENMModemResetTable OBJECT-TYPE
+			SYNTAX SEQUENCE OF EtthENMModemResetEntry
+			ACCESS not-accessible
+			STATUS mandatory
+			DESCRIPTION
+				"This table contains a reset entry for EAMs connected to a single ENM."
+			::= { etthVF100ENMModemObjects 5 }
+
+		etthENMModemResetEntry OBJECT-TYPE
+			SYNTAX EtthENMModemResetEntry
+			ACCESS not-accessible
+			STATUS mandatory  
+			DESCRIPTION
+				"An entry containing reset information for EAMs connected to a single ENM."
+			INDEX { etthENMModemResetIndex }
+			::= { etthENMModemResetTable 1 }
+
+
+		EtthENMModemResetEntry ::=
+			SEQUENCE { 
+				etthENMModemResetIndex
+					INTEGER, 
+				etthENMModemResetEAMs
+					DisplayString,
+				etthENMModemResetGo
+					INTEGER
+			 }   
+			 
+		etthENMModemResetIndex OBJECT-TYPE
+			SYNTAX INTEGER	
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"The value of this object uniquely identifies this entry."
+
+			::= { etthENMModemResetEntry 1 } 
+			
+		etthENMModemResetEAMs OBJECT-TYPE
+			SYNTAX DisplayString
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"EAMs to reset.
+				
+				EAM hostname to reset. If value 'ALL' is set then
+				all the EAMs connected to this ENM are reseted."
+			::= { etthENMModemResetEntry 2 }  
+						
+		etthENMModemResetGo OBJECT-TYPE
+			SYNTAX INTEGER
+				{
+				noReset(0),
+				reset(1)
+				}
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"On write requests this object commands the ENM to 
+				run a reset on EAMs specified by etthENMResetEAMs.
+				
+				On read requests value noReset(0) is returned."
+
+			::= { etthENMModemResetEntry 3 }     
+			
+			
+--
+-- etthENMModemSWUpdateTable
+--           
+		etthENMModemSWUpdateTable OBJECT-TYPE
+			SYNTAX SEQUENCE OF EtthENMModemSWUpdateEntry
+			ACCESS not-accessible
+			STATUS mandatory
+			DESCRIPTION
+				"This table contains an update entry for modems connected to a single ENM."
+			::= { etthVF100ENMModemObjects 6 }
+
+		etthENMModemSWUpdateEntry OBJECT-TYPE
+			SYNTAX EtthENMModemSWUpdateEntry
+			ACCESS not-accessible
+			STATUS mandatory    
+			DESCRIPTION
+				"An entry containing update information for modems connected to a single ENM."
+			INDEX { etthENMModemSWUpdateIndex }
+			::= { etthENMModemSWUpdateTable 1 }
+
+
+		EtthENMModemSWUpdateEntry ::=
+			SEQUENCE { 
+				etthENMModemSWUpdateIndex
+					INTEGER, 
+				etthENMModemSWUpdateEAMs
+					DisplayString,
+				etthENMModemSWUpdateIP
+					DisplayString, 
+				etthENMModemSWUpdateFilename
+					DisplayString,
+				etthENMModemSWUpdateGo
+					INTEGER
+			 } 
+			 
+		etthENMModemSWUpdateIndex OBJECT-TYPE
+			SYNTAX INTEGER	
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"The value of this object uniquely identifies this entry."
+			::= { etthENMModemSWUpdateEntry 1 } 
+			
+		etthENMModemSWUpdateEAMs OBJECT-TYPE
+			SYNTAX DisplayString
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"EAMs to update.                                         
+				
+				EAM hostname to reset. If value 'ALL' is set then 
+				all the EAMs connected to this ENM are updated."
+			::= { etthENMModemSWUpdateEntry 2 }  
+
+		etthENMModemSWUpdateIP OBJECT-TYPE
+			SYNTAX DisplayString
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"The SW image location ip address."
+			::= { etthENMModemSWUpdateEntry 3 } 
+
+		etthENMModemSWUpdateFilename OBJECT-TYPE
+			SYNTAX DisplayString
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"The SW image filename."
+			::= { etthENMModemSWUpdateEntry 4 } 	 
+			
+		etthENMModemSWUpdateGo OBJECT-TYPE
+			SYNTAX INTEGER
+				{
+				noUpdate(0),
+				startUpdate(1)
+				}
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"On write requests this object commands the ENM to 
+				run a software update on EAMs specified by etthENMUpdateEAMs.
+				
+				On read requests value noUpdate(0) is returned."
+			::= { etthENMModemSWUpdateEntry 5 } 
+       
+--
+-- etthENMSettingsTable
+--       
+--		etthENMSettingsTable OBJECT-TYPE
+--			SYNTAX SEQUENCE OF EtthENMSettingsEntry
+--			ACCESS not-accessible
+--			STATUS mandatory
+--			DESCRIPTION
+--				"This table contains settings for a single ENM."
+--			::= { etthVF100ENMSettingsObjects 1 }
+--	
+--		etthENMSettingsEntry OBJECT-TYPE
+--			SYNTAX EtthENMSettingsEntry
+--			ACCESS not-accessible
+--			STATUS mandatory  
+--			DESCRIPTION
+--				"An entry containing settings objects for a single ENM."
+--			INDEX { etthENMSetIndex }
+--			::= { etthENMSettingsTable 1 }
+
+--		EtthENMSettingsEntry ::=
+--			SEQUENCE {  
+--				etthENMSetIndex
+--					INTEGER,
+--				etthENMSetUSPower
+--					INTEGER,
+--				etthENMSetDSCenterFrequency
+--					INTEGER,
+--				etthENMSetDSChannelSeparation
+--					INTEGER
+--			} 
+			
+--		etthENMSetIndex OBJECT-TYPE
+--			SYNTAX INTEGER
+--			ACCESS read-only
+--			STATUS mandatory
+--			DESCRIPTION
+--				"The value of this object uniquely identifies this entry."
+--			::= { etthENMSettingsEntry 1 } 
+			
+--		etthENMSetUSPower OBJECT-TYPE
+--			SYNTAX INTEGER	
+--			ACCESS read-write
+--			STATUS mandatory
+--			DESCRIPTION
+--				"Upstream power level."
+  --
+--			::= { etthENMSettingsEntry 2 }
+			 
+--		etthENMSetDSCenterFrequency OBJECT-TYPE
+--			SYNTAX INTEGER	
+--			UNITS "hertz"
+--			ACCESS read-write
+--			STATUS mandatory
+--			DESCRIPTION
+--				"Center frequency of the lower downstream channel."
+--			::= { etthENMSettingsEntry 3 } 
+			
+--		etthENMSetDSChannelSeparation OBJECT-TYPE
+--			SYNTAX INTEGER	
+--			UNITS "hertz"
+--			ACCESS read-write
+--			STATUS mandatory
+--			DESCRIPTION
+--				"The separation between the lower and upper downstream channels."
+--			::= { etthENMSettingsEntry 4 }       
+         
+        
+--
+-- etthENMUpstreamChannelSettingsTable
+--           
+		etthENMUpstreamChannelSettingsTable OBJECT-TYPE
+			SYNTAX SEQUENCE OF EtthENMUpstreamChannelSettingsEntry
+			ACCESS not-accessible
+			STATUS mandatory
+			DESCRIPTION
+				"This table contains settings entries for ENM upstream channels."
+			::= { etthVF100ENMSettingsObjects 2 }
+
+		etthENMUpstreamChannelSettingsEntry OBJECT-TYPE
+			SYNTAX EtthENMUpstreamChannelSettingsEntry
+			ACCESS not-accessible
+			STATUS mandatory 
+			DESCRIPTION
+				"An entry containing settings for ENM upstream channels."
+			INDEX { etthUpChSettingsIndex }
+			::= { etthENMUpstreamChannelSettingsTable 1 }
+		
+		EtthENMUpstreamChannelSettingsEntry ::=
+			SEQUENCE { 
+				etthUpChSettingsIndex
+					INTEGER, 
+--				etthUpChSettingsChannel
+--					INTEGER, 
+				etthUpChSettingsPower
+					INTEGER,
+				etthUpChSettingsModulation
+					INTEGER,
+				etthUpChSettingsBurstLength
+					INTEGER 
+			 }
+			 
+		etthUpChSettingsIndex OBJECT-TYPE
+			SYNTAX INTEGER	
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"The value of this object uniquely identifies this entry."
+
+			::= { etthENMUpstreamChannelSettingsEntry 1 }    
+			 
+--		etthUpChSettingsChannel OBJECT-TYPE
+--			SYNTAX INTEGER	
+--			ACCESS read-only
+--			STATUS mandatory
+--			DESCRIPTION
+--				"Index of an upstream channel."
+--
+--			::= { etthENMUpstreamChannelSettingsEntry 2 } 
+
+		etthUpChSettingsPower OBJECT-TYPE
+			SYNTAX TenthDecimal	
+			UNITS "dBuV"
+			ACCESS read-write
+			STATUS mandatory   
+			DESCRIPTION
+				"Upstream power level. The nominal commanded target level at the connector that the eams will be ranged to. "
+
+			::= { etthENMUpstreamChannelSettingsEntry 2 }
+   
+			
+		etthUpChSettingsModulation OBJECT-TYPE
+			SYNTAX INTEGER
+				{
+				qam4(1),
+				--qam8(2),
+				qam16(3),
+				--qam32(4),
+				qam64(5),
+				--qam128(6),
+				qam256(7)--,
+				--other(254),
+				--unknown(255)
+				}
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"Upstream modulation."
+
+			::= { etthENMUpstreamChannelSettingsEntry 3 }  
+			
+		etthUpChSettingsBurstLength OBJECT-TYPE
+			SYNTAX INTEGER	
+			{
+				rs1(1),
+				rs2(2),
+				rs4(4),
+				rs8(8)
+			}		     
+			UNITS "RS Blocks"
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"Upstream burst length."
+
+			::= { etthENMUpstreamChannelSettingsEntry 4 } 
+        
+
+ END
+--
+-- TELESTE-ETTH-MIB.mib
+--

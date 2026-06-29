@@ -1,0 +1,411 @@
+--
+-- TELESTE-ETTH-EOC-C100-MIB.my
+-- *****************************************************************************
+-- Copyright (c) 2008 by:
+-- 
+-- Teleste Corporation
+-- Seponkatu 1
+-- FIN-20660 Littoinen, Finland
+-- tel. +358 2 2605 611
+-- url: http://www.teleste.com
+-- 
+-- Description: Etth-EoC-C100 private MIB.
+-- 
+-- 
+-- ****************************************************************************
+--
+
+TELESTE-BRE-MIB DEFINITIONS ::= BEGIN IMPORTS
+            PhysAddress
+                FROM RFC1213-MIB
+            OBJECT-TYPE
+                FROM RFC-1212;
+
+-- iso         OBJECT IDENTIFIER ::= { 1 }
+org         OBJECT IDENTIFIER ::= { iso 3 }
+dod         OBJECT IDENTIFIER ::= { org 6 }
+internet    OBJECT IDENTIFIER ::= { dod 1 }
+private     OBJECT IDENTIFIER ::= { internet 4 }
+enterprises OBJECT IDENTIFIER ::= { private 1 }
+teleste     OBJECT IDENTIFIER ::= { enterprises 3715 }
+etth        OBJECT IDENTIFIER ::= { teleste 12 }
+etthMIB     OBJECT IDENTIFIER ::= { etth 1 }
+
+etthEoCCMIB MODULE-IDENTITY
+        LAST-UPDATED "200810210000Z" -- 
+        ORGANIZATION "Teleste Corporation"
+        CONTACT-INFO
+	        "Teleste Corporation
+             Seponkatu 1
+             FIN-20660 Littoinen, Finland
+             tel. +358 2 2605 611
+             url: http://www.teleste.com"
+		DESCRIPTION
+      		"Etth-EoC-C100 private MIB."
+	::= { etthMIB 42 }    
+
+
+--
+-- Objects in etthEoCCMib
+--
+
+etthEoCCBaseObjects    OBJECT IDENTIFIER ::= {etthEoCCMIB 1}
+etthEoCCMasterObjects  OBJECT IDENTIFIER ::= {etthEoCCMIB 2}
+
+
+--
+-- Objects in etthEoCCBaseObjects
+--
+
+sysinfo                 OBJECT IDENTIFIER ::= {etthEoCCBaseObjects 1}
+fscript                 OBJECT IDENTIFIER ::= {etthEoCCBaseObjects 2}
+bridge                  OBJECT IDENTIFIER ::= {etthEoCCBaseObjects 3}
+bootParams              OBJECT IDENTIFIER ::= {etthEoCCBaseObjects 4}
+
+
+--
+-- Objects in sysinfo
+--
+
+         sysinfoHwProd          OBJECT-TYPE
+            SYNTAX              OCTET STRING (SIZE(0..32))
+            ACCESS              read-only
+            STATUS              current
+            DESCRIPTION         "Product name"
+            ::= { sysinfo 1 }
+
+         sysinfoHwRev          OBJECT-TYPE
+            SYNTAX              OCTET STRING (SIZE(0..32))
+            ACCESS              read-only
+            STATUS              current
+            DESCRIPTION         "Product Hw revision"
+            ::= { sysinfo 2 }
+
+         sysinfoSwRev          OBJECT-TYPE
+            SYNTAX              OCTET STRING (SIZE(0..64))
+            ACCESS              read-only
+            STATUS              current
+            DESCRIPTION         "Revision information for all sw packages of the product. If the empty string is returned the product is in a undefined state or performing firmware upgrade. See FSCRIPT."
+            ::= { sysinfo 3 }
+
+         sysinfoFwProduct       OBJECT-TYPE
+            SYNTAX              OCTET STRING (SIZE(0..64))
+            ACCESS              read-only
+            STATUS              current
+            DESCRIPTION         "Product name for the Firmware package"
+            ::= { sysinfo 4 }
+
+         sysinfoFwRev           OBJECT-TYPE
+            SYNTAX              OCTET STRING (SIZE(0..64))
+            ACCESS              read-only
+            STATUS              current
+            DESCRIPTION         "Product revision for the Firmware package"
+            ::= { sysinfo 5 }
+
+--
+-- Objects in fscript
+--
+
+         fscriptURL             OBJECT-TYPE
+            SYNTAX              OCTET STRING (SIZE(0..127))
+            ACCESS              read-write
+            STATUS              current
+            DESCRIPTION         "The URL for the upgrade script"
+            ::= { fscript 1 }
+
+         fscriptUpgradeURL      OBJECT-TYPE
+            SYNTAX              OCTET STRING (SIZE(0..127))
+            ACCESS              read-write
+            STATUS              current
+            DESCRIPTION         "The Upgrade URL for the upgrade script"
+            ::= { fscript 2 }
+
+         fscriptExecuteScript   OBJECT-TYPE
+            SYNTAX              INTEGER
+            ACCESS              read-write
+            STATUS              current
+            DESCRIPTION         "returns 1 if script is running. Set to 1 to rerun script"
+            ::= { fscript 3 }
+
+         fscriptScriptVersion   OBJECT-TYPE
+            SYNTAX              OCTET STRING (SIZE(0..64))
+            ACCESS              read-only
+            STATUS              current
+            DESCRIPTION         "Last used version string in script"
+            ::= { fscript 4 }
+
+         fscriptPhase           OBJECT-TYPE
+            SYNTAX              INTEGER {
+                                   undefined(0),
+                                   phase1(1),
+                                   phase2(2),
+                                   phase3(3),
+                                   phase4(4),
+                                   phase5(5),
+                                   ready(241)
+                                }
+            ACCESS              read-only
+            STATUS              current
+            DESCRIPTION         "The current phase of the upgrade process"
+            ::= { fscript 5 }
+
+
+--
+-- Objects in bridge
+--
+
+noOfBridgeTableEntries   OBJECT-TYPE
+    SYNTAX               INTEGER
+    ACCESS               read-only
+    STATUS               current
+    DESCRIPTION          "Number of entries in the bridge table. Must be read prior to bridgeTable."
+    ::= { bridge 1 }
+
+bridgeTable              OBJECT-TYPE
+    SYNTAX               SEQUENCE OF BridgeTableEntry
+    ACCESS               not-accessible
+    STATUS               current
+    DESCRIPTION          "Bridge table"
+    ::= { bridge 2 }
+
+    bridgeTableEntry     OBJECT-TYPE
+        SYNTAX           BridgeTableEntry
+        ACCESS           not-accessible
+        STATUS           current
+        DESCRIPTION      "Bridge table entry"
+        INDEX { bridgeTableIndex }
+        ::= { bridgeTable 1 }
+
+    BridgeTableEntry ::= SEQUENCE { bridgeTableIndex    INTEGER,
+                                    bridgeTableMac      OCTET STRING (SIZE(0..18)),
+                                    bridgeTablePort     INTEGER,
+                                    bridgeTableAge      INTEGER }
+
+    bridgeTableIndex     OBJECT-TYPE
+        SYNTAX           INTEGER
+        ACCESS           read-only
+        STATUS           current
+        DESCRIPTION      "Index"
+        ::= { bridgeTableEntry 1 }
+
+    bridgeTableMac       OBJECT-TYPE
+        SYNTAX           PhysAddress
+        ACCESS           read-only
+        STATUS           current
+        DESCRIPTION      "MAC address"
+        ::= { bridgeTableEntry 2 }
+
+    bridgeTablePort      OBJECT-TYPE
+        SYNTAX           INTEGER
+        ACCESS           read-only
+        STATUS           current
+        DESCRIPTION      "Port"
+        ::= { bridgeTableEntry 3 }
+
+    bridgeTableAge       OBJECT-TYPE
+        SYNTAX           INTEGER
+        ACCESS           read-only
+        STATUS           current
+        DESCRIPTION      "Age"
+        ::= { bridgeTableEntry 4 }
+
+
+--
+-- Objects in bootParams
+--
+
+bootMode                OBJECT-TYPE
+    SYNTAX              INTEGER { auto(0),
+                        nvram(1) }
+    ACCESS              read-write
+    STATUS              current
+    DESCRIPTION         "Boot mode. Auto configuration using tftp or boot from NVRAM"
+    ::= {bootParams 1}
+
+managementVlan          OBJECT-TYPE
+    SYNTAX              INTEGER
+    ACCESS              read-write
+    STATUS              current
+    DESCRIPTION         "Management VLAN if pttp mode is disabled."
+    ::= {bootParams 2}
+    
+pttpMode                OBJECT-TYPE
+    SYNTAX              INTEGER { disabled(0),
+                        enabled(1) }
+    ACCESS              read-write
+    STATUS              current
+    DESCRIPTION         "Pttp mode enabled/disabled. Search for default VLAN."
+    ::= {bootParams 3}
+
+
+--
+-- Objects in etthEoCCMasterObjects
+--
+
+ibra                    OBJECT IDENTIFIER ::= {etthEoCCMasterObjects 1}
+slaveNodes              OBJECT IDENTIFIER ::= {etthEoCCMasterObjects 2}
+
+
+--
+-- Objects in ibra
+--
+
+noOfIbraTableEntries    OBJECT-TYPE
+    SYNTAX              INTEGER
+    ACCESS              read-only
+    STATUS              current
+    DESCRIPTION         "Number of entries in the IBRA table. Must be read prior to ibraTable."
+    ::= { ibra 1 }
+
+ibraTable               OBJECT-TYPE
+    SYNTAX              SEQUENCE OF IbraTableEntry
+    ACCESS              not-accessible
+    STATUS              current
+    DESCRIPTION         "IBRA table"
+    ::= { ibra 2 }
+
+    ibraTableEntry          OBJECT-TYPE
+        SYNTAX              IbraTableEntry
+        ACCESS              not-accessible
+        STATUS              current
+        DESCRIPTION         ""
+        INDEX               { ibraTableIndex }
+        ::= { ibraTable 1 }
+
+    IbraTableEntry ::= SEQUENCE { ibraTableIndex  INTEGER,
+                                  ibraStatus      INTEGER,
+                                  ibraCpeMac      PhysAddress,
+                                  ibraPcMac       PhysAddress,
+                                  ibraPcIpAddress OCTET STRING (SIZE(0..16)),
+				  ibraPLCPort     INTEGER }
+
+        ibraTableIndex          OBJECT-TYPE
+            SYNTAX              INTEGER
+            ACCESS              read-only
+            STATUS              current
+            DESCRIPTION         "The index of the entry in the table"
+            ::= { ibraTableEntry 1 }
+
+        ibraStatus              OBJECT-TYPE
+            SYNTAX              INTEGER { UNDEFINED(0),
+                                          CPEMAC-PCMAC(1),
+                                          PCMAC-PCIP(2),
+                                          CPEMAC-PCMAC-PCIP(3),
+                                          MULTICAST(4) }
+            ACCESS              read-only
+            STATUS              current
+            DESCRIPTION         "Status of this Entry."
+            ::= { ibraTableEntry 2 }
+
+        ibraCpeMac              OBJECT-TYPE
+            SYNTAX              PhysAddress
+            ACCESS              read-only
+            STATUS              current
+            DESCRIPTION         "The MAC address of the CPE"
+            ::= { ibraTableEntry 3 }
+
+        ibraPcMac               OBJECT-TYPE
+            SYNTAX              PhysAddress
+            ACCESS              read-only
+            STATUS              current
+            DESCRIPTION         "The MAC address of the customer equipment"
+            ::= { ibraTableEntry 4 }
+
+        ibraPcIpAddress         OBJECT-TYPE
+            SYNTAX              OCTET STRING (SIZE(0..16))
+            ACCESS              read-only
+            STATUS              current
+            DESCRIPTION         "The IP address of the customer equipment"
+            ::= { ibraTableEntry 5 }
+
+	ibraPLCPort             OBJECT-TYPE
+            SYNTAX              INTEGER { NOT-CONNECTED(-1)}
+            ACCESS              read-only
+            STATUS              current
+            DESCRIPTION         "The PLC port associated with this CPE-MAC"
+            ::= { ibraTableEntry 6 }
+
+	
+
+noOfSlaveNodesEntries    OBJECT-TYPE
+    SYNTAX              INTEGER
+    ACCESS              read-only
+    STATUS              current
+    DESCRIPTION         "Number of entries in the slaveNodes table. Must be read prior to slaveNodesTable."
+    ::= { slaveNodes 1 }
+
+slaveNodesTable               OBJECT-TYPE
+    SYNTAX              SEQUENCE OF SlaveNodesTableEntry
+    ACCESS              not-accessible
+    STATUS              current
+    DESCRIPTION         "Slave Nodes table"
+    ::= { slaveNodes 2 }
+
+    slaveNodesTableEntry          OBJECT-TYPE
+        SYNTAX              SlaveNodesTableEntry
+        ACCESS              not-accessible
+        STATUS              current
+        DESCRIPTION         ""
+        INDEX               { slaveNodesMAC }
+        ::= { slaveNodesTable 1 }
+
+    SlaveNodesTableEntry ::= SEQUENCE { slaveNodesMAC     PhysAddress,
+                                  slaveNodesIP      OCTET STRING (SIZE(0..16)),
+                                  slaveNodesPort       INTEGER,
+                                  slaveNodesTXSpeed    INTEGER,
+                                  slaveNodesRXSpeed    INTEGER,
+                                  slaveNodesTXOctet    INTEGER,
+                                  slaveNodesRXOctet    INTEGER }
+
+
+       slaveNodesMAC            OBJECT-TYPE
+            SYNTAX              PhysAddress
+            ACCESS              read-only
+            STATUS              current
+            DESCRIPTION         "The MAC address of the connected slave (CPE)"
+            ::= { slaveNodesTableEntry 1 }
+            
+       slaveNodesPort          OBJECT-TYPE
+            SYNTAX              INTEGER
+            ACCESS              read-only
+            STATUS              current
+            DESCRIPTION         "The port of the connected slave (CPE)"
+            ::= { slaveNodesTableEntry 2 }
+            
+       slaveNodesIP         OBJECT-TYPE
+            SYNTAX              OCTET STRING (SIZE(0..16))
+            ACCESS              read-only
+            STATUS              current
+            DESCRIPTION         "The IP address of the connected slave (CPE)"
+            ::= { slaveNodesTableEntry 3 }
+            
+         slaveNodesTXSpeed          OBJECT-TYPE
+            SYNTAX              INTEGER
+            ACCESS              read-only
+            STATUS              current
+            DESCRIPTION         "The physical transmission speed To the slave (CPE)"
+            ::= { slaveNodesTableEntry 4 }
+    
+         slaveNodesRXSpeed          OBJECT-TYPE
+            SYNTAX              INTEGER
+            ACCESS              read-only
+            STATUS              current
+            DESCRIPTION         "The physical transmission speed from the slave (CPE)"
+            ::= { slaveNodesTableEntry 5 }  
+
+         slaveNodesTXOctet          OBJECT-TYPE
+            SYNTAX              INTEGER
+            ACCESS              read-only
+            STATUS              current
+            DESCRIPTION         "The number of octets sent to the slave (CPE)"
+            ::= { slaveNodesTableEntry 6 }
+    
+         slaveNodesRXOctet          OBJECT-TYPE
+            SYNTAX              INTEGER
+            ACCESS              read-only
+            STATUS              current
+            DESCRIPTION         "The number of octets received from the slave (CPE)"
+            ::= { slaveNodesTableEntry 7 }  
+
+
+END

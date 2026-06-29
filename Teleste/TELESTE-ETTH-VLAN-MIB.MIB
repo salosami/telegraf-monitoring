@@ -1,0 +1,341 @@
+--
+-- TELESTE-VLAN-MIB.mib
+-- *****************************************************************************
+-- Copyright (c) 2006 by:
+-- 
+-- Teleste Corporation
+-- Seponkatu 1
+-- FIN-20660 Littoinen, Finland
+-- tel. +358 2 2605 611
+-- url: http://www.teleste.com
+-- 
+-- Description: Ethernet to home (EttH) vlan functionality private MIB.
+-- 
+-- 
+-- ****************************************************************************
+-- 
+    
+	TELESTE-ETTH-VLAN-MIB DEFINITIONS ::= BEGIN
+ 
+		IMPORTS
+			OBJECT-TYPE			
+				FROM RFC-1212			
+			DisplayString			
+				FROM RFC1213-MIB			
+			etthMIB		
+				FROM TELESTE-ETTH-MIB  
+			RowStatus
+			    FROM SNMPv2-TC      
+			ifIndex
+				FROM IF-MIB
+			;  
+               
+                            
+etthVlanMIB MODULE-IDENTITY
+        LAST-UPDATED "200801230000Z" -- 
+        ORGANIZATION "Teleste Corporation"
+        CONTACT-INFO
+	        "Teleste Corporation
+             Seponkatu 1
+             FIN-20660 Littoinen, Finland
+             tel. +358 2 2605 611
+             url: http://www.teleste.com"
+		DESCRIPTION
+      		"Ethernet to home (EttH) vlan functionality private MIB."
+      		    
+      	REVISION        "200704270000Z"
+    	DESCRIPTION
+            "Initial Version of this MIB module." 
+            
+        REVISION        "200706060000Z"
+    	DESCRIPTION
+            "Multicast Vlan Table added."  
+        REVISION        "200710290000Z"
+    	DESCRIPTION
+            "Vlan Force Ingress table added."   
+            
+        REVISION        "200801230000Z"
+    	DESCRIPTION
+            "Multicast vlan mapping objects removed."
+
+
+            
+
+	::= { etthMIB 30 }  
+	
+	
+etthVlanObjects OBJECT IDENTIFIER ::= { etthVlanMIB 1 }            
+	         
+	         
+etthVlanTable OBJECT-TYPE
+			SYNTAX SEQUENCE OF EtthVlanEntry
+			ACCESS not-accessible
+			STATUS mandatory
+			DESCRIPTION
+				"This table contains vlan configuration of interfaces."
+			::= { etthVlanObjects 1 } 
+
+etthVlanEntry OBJECT-TYPE
+			SYNTAX EtthVlanEntry
+			ACCESS not-accessible
+			STATUS mandatory
+			DESCRIPTION
+				"An entry containing vlan configuration objects for a single interface."			
+				INDEX { ifIndex }
+			::= { etthVlanTable 1 }
+
+EtthVlanEntry ::=
+			SEQUENCE {
+				etthVlanUntagged
+					INTEGER, 
+				etthVlanTagged 
+					DisplayString, 
+				etthVlanEgressRemove
+					DisplayString		
+			 }                
+			 
+etthVlanUntagged OBJECT-TYPE
+			SYNTAX INTEGER
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"Specifies a single VLAN id. Frames of the specified VLAN are untagged on egress. 
+ 				 On ingress, frames without tag are classified to this VLAN."
+			::= { etthVlanEntry 1 } 	
+			
+etthVlanTagged OBJECT-TYPE
+			SYNTAX DisplayString
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"Specifies a set of VLAN ids. Frames of specified VLANs are tagged on egress.
+ 	
+ 				VLAN ids are specified as a list of comma separated values.
+ 	
+ 				example: 100,200,300
+ 				
+ 				To remove all VLAN ids, set etthVlanTagged to an empty string."
+			::= { etthVlanEntry 2 } 	
+			
+etthVlanEgressRemove OBJECT-TYPE
+			SYNTAX DisplayString
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"Specifies a set of VLAN ids. VLAN tags are removed on egress
+				
+				VLAN ids are specified as a list of comma separated values.
+				
+				example: 100,200,300
+				
+				To remove all VLAN ids, set etthVlanEgressRemove to an empty string."
+			::= { etthVlanEntry 3 } 	 
+			 
+			 
+--
+-- etthPortBasedVlanTable 
+--    			
+	etthPortBasedVlanTable  OBJECT-TYPE
+			SYNTAX SEQUENCE OF EtthPortBasedVlanEntry
+			ACCESS not-accessible
+			STATUS mandatory
+			DESCRIPTION
+				"This table contains port based vlan configuration of interfaces."
+			::= { etthVlanObjects 2 }
+	
+		etthPortBasedVlanEntry OBJECT-TYPE
+			SYNTAX EtthPortBasedVlanEntry
+			ACCESS not-accessible
+			STATUS mandatory    
+			DESCRIPTION
+				"An entry containing port based vlan configuration objects for a single interface."
+			INDEX { etthPortBasedVlanIndex}
+			::= { etthPortBasedVlanTable 1 }
+
+		EtthPortBasedVlanEntry ::=
+			SEQUENCE {    
+				etthPortBasedVlanIndex
+					INTEGER, 
+				etthPortBasedVlanIf
+					DisplayString,
+				etthPortBasedVlanIfClient
+					INTEGER,
+				etthPortBasedVlanIfA
+					INTEGER,
+				etthPortBasedVlanIfB
+					INTEGER, 
+				etthPortBasedVlanIfCPU
+					INTEGER
+					}  
+					
+		etthPortBasedVlanIndex OBJECT-TYPE
+			SYNTAX INTEGER			
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"The index value that uniquely identifies an entry in the etthPortBasedVlanTable."
+			::= { etthPortBasedVlanEntry 1 }  
+			
+		etthPortBasedVlanIf OBJECT-TYPE
+			SYNTAX DisplayString			
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"A textual string describing the interface(s). "
+			::= { etthPortBasedVlanEntry 2 } 
+					
+		etthPortBasedVlanIfClient OBJECT-TYPE
+			SYNTAX INTEGER
+			{
+			    disabled(0),
+			    enabled(1)
+			} 			
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"Enables/disables access between this interface and all user interfaces."
+			::= { etthPortBasedVlanEntry 3 }  
+			
+		etthPortBasedVlanIfA OBJECT-TYPE
+			SYNTAX INTEGER
+			{
+			    disabled(0),
+			    enabled(1)
+			} 			
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"Enables/disables access between this interface and A interface. Note
+				 that A-A configuration is not supported."
+			::= { etthPortBasedVlanEntry 4 } 
+			
+		etthPortBasedVlanIfB OBJECT-TYPE
+			SYNTAX INTEGER
+			{
+			    disabled(0),
+			    enabled(1)
+			} 			
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"Enables/disables access between this interface and B interface. Note
+				 that B-B configuration is not supported."
+			::= { etthPortBasedVlanEntry 5 }
+			
+		etthPortBasedVlanIfCPU OBJECT-TYPE
+			SYNTAX INTEGER
+			{
+			    disabled(0),
+			    enabled(1)
+			} 			
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"Enables/disables access between this interface and CPU interface. Note
+				 that CPU-CPU configuration is not supported."
+			::= { etthPortBasedVlanEntry 6 } 
+						                          
+
+
+			                          
+--
+-- etthMulticastVlanTable 
+--    			
+	etthMulticastVlanTable OBJECT-TYPE
+			SYNTAX SEQUENCE OF EtthMulticastVlanEntry
+			ACCESS not-accessible
+			STATUS mandatory
+			DESCRIPTION
+				"This table contains multicast vlan configuration of interfaces."
+			::= { etthVlanObjects 4 }
+	
+		etthMulticastVlanEntry OBJECT-TYPE
+			SYNTAX EtthMulticastVlanEntry
+			ACCESS not-accessible
+			STATUS mandatory    
+			DESCRIPTION
+				"An entry containing multicast vlan configuration objects for a single interface."
+			INDEX { ifIndex}
+			::= { etthMulticastVlanTable 1 }
+
+		EtthMulticastVlanEntry ::=
+			SEQUENCE {  
+				etthMulticastVlanIds
+					DisplayString
+					} 
+					
+		etthMulticastVlanIds OBJECT-TYPE
+			SYNTAX DisplayString			
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"Specifies multicast VLAN id(s).  
+				
+				See product documentation for details.
+								
+				To remove VLAN id(s), set etthMulticastVlanIds to an empty string."
+			::= { etthMulticastVlanEntry 1 }   
+			
+           
+--
+-- etthVlanIngressForceTable
+--             
+    	etthVlanIngressForceTable OBJECT-TYPE
+			SYNTAX SEQUENCE OF EtthVlanIngressForceEntry
+			ACCESS not-accessible
+			STATUS mandatory
+			DESCRIPTION
+				"This table contains vlan ingress force configuration of interfaces."
+			::= { etthVlanObjects 5 }
+
+       	etthVlanIngressForceEntry OBJECT-TYPE
+			SYNTAX EtthVlanIngressForceEntry
+			ACCESS not-accessible
+			STATUS mandatory    
+			DESCRIPTION
+				"An entry containing vlan ingress force configuration objects for a single interface."
+			INDEX { ifIndex }
+			::= { etthVlanIngressForceTable 1 }
+
+        EtthVlanIngressForceEntry ::=
+			SEQUENCE {   
+				etthVlanIngressForceMode
+					INTEGER,
+				etthVlanIngressForceVid
+					INTEGER
+			 }
+			 
+		etthVlanIngressForceMode OBJECT-TYPE
+			SYNTAX INTEGER
+			{
+			    default(1),
+			    forced(2)
+			} 			
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"Vlan tagging mode."
+			::= { etthVlanIngressForceEntry 1 }
+ 
+    
+        etthVlanIngressForceVid OBJECT-TYPE
+			SYNTAX INTEGER			
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"Vlan id forced on ingress. Setting this value to 0 disables forcing and sets tagging mode to 'default'"
+			::= { etthVlanIngressForceEntry 2 }
+
+
+			   
+END
+
+
+
+
+			                                    
+			                                    
+			                                    
+			                                    
+			                                    
+			                                    

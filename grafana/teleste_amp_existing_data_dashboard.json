@@ -1,0 +1,916 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "influxdb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "commonInternalTemperature"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "unit",
+                "value": "celsius"
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 3
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "influxdb"
+          },
+          "query": "from(bucket: \"${bucket}\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"teleste_amp\")\n  |> filter(fn: (r) => r.agent_host =~ /^${device:regex}$/)\n  |> filter(fn: (r) => r._field == \"modem_rx_level\" or r._field == \"modem_tx_level\")\n  |> aggregateWindow(every: 15m, fn: mean, createEmpty: false)",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "influxdb"
+          },
+          "query": "from(bucket: \"${bucket}\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"snmp\")\n  |> filter(fn: (r) => r._field == \"commonInternalTemperature\")\n  |> aggregateWindow(every: 15m, fn: mean, createEmpty: false)",
+          "refId": "B"
+        }
+      ],
+      "title": "RX/TX Level Trend by Device",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "influxdb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 9
+      },
+      "id": 2,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "influxdb"
+          },
+          "query": "from(bucket: \"${bucket}\")\n  |> range(start: -24h)\n  |> filter(fn: (r) => r._measurement == \"teleste_amp\")\n  |> filter(fn: (r) => r._field == \"${metric}\")\n  |> group(columns: [\"agent_host\"])\n  |> last()\n  |> keep(columns: [\"agent_host\", \"_value\", \"_time\"])\n  |> rename(columns: {_value: \"value\"})\n  |> sort(columns: [\"value\"], desc: true)",
+          "refId": "A"
+        }
+      ],
+      "title": "Top Devices by Selected Metric (Last 24h)",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "result": true,
+              "table": true,
+              "_start": true,
+              "_stop": true
+            },
+            "renameByName": {
+              "agent_host": "device"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "influxdb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 8,
+            "showPoints": "never"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "commonInternalTemperature"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "unit",
+                "value": "celsius"
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 3
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 9
+      },
+      "id": 3,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "influxdb"
+          },
+          "query": "from(bucket: \"${bucket}\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"teleste_amp\")\n  |> filter(fn: (r) => r.agent_host =~ /^${device:regex}$/)\n  |> filter(fn: (r) => r._field == \"modem_bad\" or r._field == \"modem_poll_timeout\" or r._field == \"alsc_status\" or r._field == \"rf_performance_status\" or r._field == \"automatic_alignment_last_run_status\")\n  |> aggregateWindow(every: 1h, fn: last, createEmpty: false)",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "influxdb"
+          },
+          "query": "from(bucket: \"${bucket}\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"snmp\")\n  |> filter(fn: (r) => r._field == \"commonInternalTemperature\")\n  |> aggregateWindow(every: 15m, fn: mean, createEmpty: false)",
+          "refId": "B"
+        }
+      ],
+      "title": "Status and Alarm-related Trend (1h)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "influxdb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never"
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "previous_day"
+            },
+            "properties": [
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "dash": [
+                    10,
+                    6
+                  ],
+                  "fill": "dash"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "commonInternalTemperature"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "unit",
+                "value": "celsius"
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 3
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 17
+      },
+      "id": 4,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "influxdb"
+          },
+          "query": "from(bucket: \"${bucket}\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"teleste_amp\")\n  |> filter(fn: (r) => r.agent_host =~ /^${device:regex}$/)\n  |> filter(fn: (r) => r._field == \"modem_rx_level\")\n  |> aggregateWindow(every: 15m, fn: mean, createEmpty: false)",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "influxdb"
+          },
+          "query": "from(bucket: \"${bucket}\")\n  |> range(start: time(v: uint(v: v.timeRangeStart) - 86400000000000), stop: time(v: uint(v: v.timeRangeStop) - 86400000000000))\n  |> filter(fn: (r) => r._measurement == \"teleste_amp\")\n  |> filter(fn: (r) => r.agent_host =~ /^${device:regex}$/)\n  |> filter(fn: (r) => r._field == \"modem_rx_level\")\n  |> aggregateWindow(every: 15m, fn: mean, createEmpty: false)\n  |> timeShift(duration: 24h)\n  |> set(key: \"_field\", value: \"previous_day\")",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "influxdb"
+          },
+          "query": "from(bucket: \"${bucket}\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"snmp\")\n  |> filter(fn: (r) => r._field == \"commonInternalTemperature\")\n  |> aggregateWindow(every: 15m, fn: mean, createEmpty: false)",
+          "refId": "C"
+        }
+      ],
+      "title": "Daily Cycle Proxy: Current vs Previous Day",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "influxdb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 17
+      },
+      "id": 5,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "influxdb"
+          },
+          "query": "from(bucket: \"${bucket}\")\n  |> range(start: -24h)\n  |> filter(fn: (r) => r._measurement == \"teleste_amp\")\n  |> filter(fn: (r) => r.agent_host =~ /^${device:regex}$/)\n  |> filter(fn: (r) => contains(value: r._field, set: [\"modem_rx_level\",\"modem_tx_level\",\"level_control_value\",\"acx_supply_voltage_rms\",\"alsc_status\",\"rf_performance_status\",\"modem_bad\",\"modem_poll_timeout\"]))\n  |> last()\n  |> keep(columns: [\"_time\",\"agent_host\",\"_field\",\"_value\"])\n  |> pivot(rowKey:[\"agent_host\"], columnKey:[\"_field\"], valueColumn:\"_value\")\n  |> sort(columns:[\"agent_host\"], desc:false)",
+          "refId": "A"
+        }
+      ],
+      "title": "Latest Key Values by Device",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "influxdb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never"
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "commonInternalTemperature"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "unit",
+                "value": "celsius"
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 3
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 25
+      },
+      "id": 6,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "influxdb"
+          },
+          "query": "from(bucket: \"${bucket}\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r.agent_host =~ /^${cm_device:regex}$/)\n  |> filter(fn: (r) => (r._measurement == \"docsIfDownChannel\" and r._field == \"down_power_dbmv\") or (r._measurement == \"docsIfSigQ\" and r._field == \"snr_db\") or (r._measurement == \"docsis_cm\" and r._field == \"cm_txpower_dbmv\"))\n  |> aggregateWindow(every: 15m, fn: mean, createEmpty: false)",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "influxdb"
+          },
+          "query": "from(bucket: \"${bucket}\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"snmp\")\n  |> filter(fn: (r) => r._field == \"commonInternalTemperature\")\n  |> aggregateWindow(every: 15m, fn: mean, createEmpty: false)",
+          "refId": "B"
+        }
+      ],
+      "title": "Cable Modems: Levels (DS Power, SNR, TX Power)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "influxdb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 25
+      },
+      "id": 7,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "influxdb"
+          },
+          "query": "from(bucket: \"${bucket}\")\n  |> range(start: -24h)\n  |> filter(fn: (r) => r.agent_host =~ /^${cm_device:regex}$/)\n  |> filter(fn: (r) => (r._measurement == \"ifXTable\" and (r._field == \"ifHCInOctets\" or r._field == \"ifHCOutOctets\" or r._field == \"ifHCInUcastPkts\" or r._field == \"ifHCOutUcastPkts\")) or (r._measurement == \"docsIf31DsOfdm\" and (r._field == \"ds_ofdm_corrected\" or r._field == \"ds_ofdm_uncorrectable\")))\n  |> group(columns: [\"agent_host\", \"_field\"])\n  |> last()\n  |> keep(columns: [\"agent_host\",\"_field\",\"_value\"])\n  |> pivot(rowKey:[\"agent_host\"], columnKey:[\"_field\"], valueColumn:\"_value\")\n  |> sort(columns:[\"agent_host\"], desc:false)",
+          "refId": "A"
+        }
+      ],
+      "title": "Cable Modems: Counterit (Latest)",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "influxdb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 33
+      },
+      "id": 8,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "influxdb"
+          },
+          "query": "from(bucket: \"${bucket}\")\n  |> range(start: -24h)\n  |> filter(fn: (r) => r.agent_host =~ /^${cm_device:regex}$/)\n  |> filter(fn: (r) => (r._measurement == \"docsIfDownChannel\" and r._field == \"down_power_dbmv\") or (r._measurement == \"docsIfSigQ\" and r._field == \"snr_db\") or (r._measurement == \"docsis_cm\" and r._field == \"cm_txpower_dbmv\") or (r._measurement == \"docsIf31DsOfdm\" and (r._field == \"ds_ofdm_mer_x10\" or r._field == \"ds_ofdm_corrected\" or r._field == \"ds_ofdm_uncorrectable\")))\n  |> group(columns: [\"agent_host\", \"_field\"])\n  |> last()\n  |> keep(columns: [\"agent_host\",\"_field\",\"_value\"])\n  |> pivot(rowKey:[\"agent_host\"], columnKey:[\"_field\"], valueColumn:\"_value\")\n  |> sort(columns:[\"agent_host\"], desc:false)",
+          "refId": "A"
+        }
+      ],
+      "title": "Cable Modems: Latest Levels + OFDM",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "influxdb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 33
+      },
+      "id": 9,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "influxdb"
+          },
+          "query": "from(bucket: \"${bucket}\")\n  |> range(start: -24h)\n  |> filter(fn: (r) => r._measurement == \"teleste_amp\")\n  |> filter(fn: (r) => r.agent_host =~ /^${device:regex}$/)\n  |> filter(fn: (r) => contains(value: r._field, set: [\"level_control_value\",\"level_control_step_size\",\"level_control_step\",\"level_control_min_value\",\"level_control_max_value\",\"alsc_control\",\"alsc_gain_and_slope_control_state\",\"alsc_target_level_value\",\"alsc_target_level_backoff\",\"alsc_level_control_default_value\",\"ingress_switch_attenuation\",\"ingress_switch_attenuation_step_size\",\"ingress_switch_attenuation_step\",\"rf_performance_control\",\"amplifier_return_path_rff_control\",\"pilot_level\",\"automatic_alignment_option_value\",\"automatic_alignment_option_value2\",\"automatic_alignment_option_enable\"]))\n  |> last()\n  |> keep(columns: [\"_time\",\"agent_host\",\"_field\",\"_value\"])\n  |> sort(columns:[\"agent_host\",\"_field\"], desc:false)",
+          "refId": "A"
+        }
+      ],
+      "title": "Ampit: Kaikki saatavilla olevat saadin-arvot",
+      "type": "table"
+    }
+  ],
+  "refresh": "5m",
+  "schemaVersion": 39,
+  "style": "dark",
+  "tags": [
+    "teleste",
+    "amp",
+    "thermal-cycle",
+    "influxdb"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": "snmp",
+          "value": "snmp"
+        },
+        "hide": 0,
+        "label": "Bucket",
+        "name": "bucket",
+        "options": [
+          {
+            "selected": true,
+            "text": "snmp",
+            "value": "snmp"
+          }
+        ],
+        "query": "snmp",
+        "skipUrlSync": false,
+        "type": "custom"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "influxdb"
+        },
+        "definition": "import \"influxdata/influxdb/schema\"\nschema.tagValues(\n  bucket: \"${bucket}\",\n  tag: \"agent_host\",\n  predicate: (r) => r._measurement == \"teleste_amp\",\n  start: -30d\n)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Device",
+        "multi": true,
+        "name": "device",
+        "options": [],
+        "query": "import \"influxdata/influxdb/schema\"\nschema.tagValues(\n  bucket: \"${bucket}\",\n  tag: \"agent_host\",\n  predicate: (r) => r._measurement == \"teleste_amp\",\n  start: -30d\n)",
+        "refresh": 2,
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "influxdb"
+        },
+        "definition": "import \"influxdata/influxdb/schema\"\nschema.tagValues(\n  bucket: \"${bucket}\",\n  tag: \"agent_host\",\n  predicate: (r) => r._measurement == \"docsIfDownChannel\" or r._measurement == \"ifXTable\",\n  start: -30d\n)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "CM Device",
+        "multi": true,
+        "name": "cm_device",
+        "options": [],
+        "query": "import \"influxdata/influxdb/schema\"\nschema.tagValues(\n  bucket: \"${bucket}\",\n  tag: \"agent_host\",\n  predicate: (r) => r._measurement == \"docsIfDownChannel\" or r._measurement == \"ifXTable\",\n  start: -30d\n)",
+        "refresh": 2,
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": "modem_poll_timeout",
+          "value": "modem_poll_timeout"
+        },
+        "hide": 0,
+        "label": "Rank Metric",
+        "name": "metric",
+        "options": [
+          {
+            "selected": true,
+            "text": "modem_poll_timeout",
+            "value": "modem_poll_timeout"
+          },
+          {
+            "selected": false,
+            "text": "modem_bad",
+            "value": "modem_bad"
+          },
+          {
+            "selected": false,
+            "text": "modem_rx_level",
+            "value": "modem_rx_level"
+          },
+          {
+            "selected": false,
+            "text": "modem_tx_level",
+            "value": "modem_tx_level"
+          },
+          {
+            "selected": false,
+            "text": "level_control_value",
+            "value": "level_control_value"
+          },
+          {
+            "selected": false,
+            "text": "acx_supply_voltage_rms",
+            "value": "acx_supply_voltage_rms"
+          },
+          {
+            "selected": false,
+            "text": "alsc_status",
+            "value": "alsc_status"
+          },
+          {
+            "selected": false,
+            "text": "rf_performance_status",
+            "value": "rf_performance_status"
+          }
+        ],
+        "query": "modem_poll_timeout,modem_bad,modem_rx_level,modem_tx_level,level_control_value,acx_supply_voltage_rms,alsc_status,rf_performance_status",
+        "skipUrlSync": false,
+        "type": "custom"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-7d",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "Teleste AMP - Existing Data Thermal Cycle",
+  "uid": "teleste-amp-existing-data",
+  "version": 1,
+  "weekStart": ""
+}

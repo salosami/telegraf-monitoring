@@ -1,0 +1,793 @@
+TELESTE-FTTX-ADMIN-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+   NetworkAddress,
+   IpAddress, Counter, Gauge, TimeTicks
+      FROM RFC1155-SMI
+   DisplayString, PhysAddress
+      FROM RFC-1213
+   admin
+      FROM TELESTE-FTTX-ROOT-MIB;
+--   OBJECT-TYPE
+--      FROM RFC-1212;
+
+-- revision date: 2.00, Feb. 03, 2008
+-- revision date: 2.03, Aug. 27, 2008
+-- revision date: 2.04, Oct. 06, 2008
+
+-- Software group
+
+adminVersion	OBJECT IDENTIFIER ::= { admin 1 }
+
+versionMajor OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+                "The major software version number of the agent
+                run time image."
+        ::= { adminVersion 1 }
+
+versionMinor OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+                "The minor software version number of the agent
+                run time image."
+        ::= { adminVersion 2 }
+
+adminCraftPortBaudRate OBJECT-TYPE
+        SYNTAX  INTEGER {
+                b9600(9600),
+                b19200(19200),
+                b38400(38400),
+                b57600(57600),
+                b115200(115200)
+                }
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+                "The baud rate setting for the out-of-band port."
+        ::= { admin 2 }
+
+adminConsoleIdleTimeouts OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+                "timeouts is 0 or 60-86400, unit is second, 0: never idle,
+                default is 600"
+        ::= { admin 3 }
+
+adminPrompt OBJECT-TYPE
+        SYNTAX  DisplayString (SIZE (1..31))
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+                " "
+        ::= { admin 4 }
+
+adminBootMethod OBJECT-TYPE
+        SYNTAX  INTEGER {
+                manual(1),
+                dhcp(2)
+                }
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+                " "
+        ::= { admin 5 }
+
+adminIpAddr OBJECT-TYPE
+        SYNTAX  IpAddress
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+              "The agent's administrative IP address.  The
+              current operational IP address can be obtained from
+              the ipAdEntAddr in the ipAddrTable.  This parameter
+              will take effect only after a agent restart or
+              agent reset.  This parameter will always be updated
+              in the EEPROM."
+        ::= { admin 6 }
+
+adminIpNetMask OBJECT-TYPE
+        SYNTAX  IpAddress
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+              "The agent's administrative IP subnet mask.  The
+              current operational IP subnet mask can be obtained from
+              the ipAdEntMask in the ipAddrTable.  This parameter
+              will take effect only after a agent restart or
+              agent reset.  This parameter will always be updated
+              in the EEPROM."
+        ::= { admin 7 }
+
+adminDefaultGateway OBJECT-TYPE
+        SYNTAX  IpAddress
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+              "The agent's administrative default gateway IP address.
+              The current operational IP default gateway IP address
+              can be obtained from the ipRouteDest in the ipRouteTable.
+              This parameter will take effect only after a agent restart or
+              agent reset.  This parameter will always be updated
+              in the EEPROM."
+        ::= { admin 8 }
+
+adminPrimaryDnsServer OBJECT-TYPE
+        SYNTAX  IpAddress
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+                " "
+        ::= { admin 9 }
+
+adminSecondaryDnsServer OBJECT-TYPE
+        SYNTAX  IpAddress
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+                " "
+        ::= { admin 10 }
+
+adminSnmpServer OBJECT-TYPE
+        SYNTAX  INTEGER {
+                off(1),
+                on(2)
+                }
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+                " "
+        ::= { admin 11 }
+
+adminHttpServer OBJECT-TYPE
+        SYNTAX  INTEGER {
+                off(1),
+                on(2)
+                }
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+                " "
+        ::= { admin 12 }
+
+adminTelnet OBJECT IDENTIFIER ::= { admin 13 }
+
+telnetServer OBJECT-TYPE
+        SYNTAX  INTEGER {
+                off(1),
+                on(2)
+                }
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+                " "
+        ::= { adminTelnet 1 }
+
+telnetIdleTimeouts OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+                "timeouts is 0 or 60-86400, unit is second, 0: never idle,
+                default is 600"
+        ::= { adminTelnet 2 }
+
+telnetMaxSessions OBJECT-TYPE
+        SYNTAX  INTEGER (1..4)
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+                " "
+        ::= { adminTelnet 3 }
+
+adminFtpServer OBJECT-TYPE
+        SYNTAX  INTEGER {
+                off(1),
+                on(2)
+                }
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+                " "
+        ::= { admin 14 }
+
+adminTftpServer OBJECT-TYPE
+        SYNTAX  INTEGER {
+                off(1),
+                on(2)
+                }
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+                " "
+        ::= { admin 15 }
+
+-- the agent trap target group
+
+adminTrapSending OBJECT-TYPE
+        SYNTAX  INTEGER {
+                off(1),
+                on(2)
+                }
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+                " "
+        ::= { admin 16 }
+
+adminTrapTargetTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF AdminTrapTargetEntry
+        ACCESS  not-accessible
+        STATUS  mandatory
+        DESCRIPTION
+                " "
+        ::= { admin 17 }
+
+adminTrapTargetEntry OBJECT-TYPE
+        SYNTAX  AdminTrapTargetEntry
+        ACCESS  not-accessible
+        STATUS  mandatory
+        DESCRIPTION
+                " "
+        INDEX { trapTargetIndex }
+        ::= { adminTrapTargetTable 1 }
+
+AdminTrapTargetEntry ::= SEQUENCE {
+        trapTargetIndex      INTEGER,
+        trapTargetIpAddr     IpAddress,
+        trapTargetComm       DisplayString
+        }
+
+trapTargetIndex OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+                " "
+        ::= { adminTrapTargetEntry 1 }
+
+trapTargetIpAddr OBJECT-TYPE
+        SYNTAX  IpAddress
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+                " "
+        ::= { adminTrapTargetEntry 2 }
+
+trapTargetComm OBJECT-TYPE
+        SYNTAX  DisplayString (SIZE (0..31))
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+                " "
+        ::= { adminTrapTargetEntry 3 }
+
+-- the agent email alert group
+
+adminEmail OBJECT IDENTIFIER ::= { admin 18 }
+
+emailSendAlert OBJECT-TYPE
+        SYNTAX  INTEGER {
+                off(1),
+                on(2)
+                }
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+                " "
+        ::= { adminEmail 1 }
+
+emailServerIpAddr OBJECT-TYPE
+        SYNTAX  IpAddress
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+                " "
+        ::= { adminEmail 2 }
+
+emailRecipientTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF EmailRecipientEntry
+        ACCESS  not-accessible
+        STATUS  mandatory
+        DESCRIPTION
+                " "
+        ::= { adminEmail 3 }
+
+emailRecipientEntry OBJECT-TYPE
+        SYNTAX  EmailRecipientEntry
+        ACCESS  not-accessible
+        STATUS  mandatory
+        DESCRIPTION
+                " "
+        INDEX { recipientIndex }
+        ::= { emailRecipientTable 1 }
+
+EmailRecipientEntry ::= SEQUENCE {
+        recipientIndex         INTEGER,
+        recipientAddress       DisplayString
+        }
+
+recipientIndex OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+                " "
+        ::= { emailRecipientEntry 1 }
+
+recipientAddress OBJECT-TYPE
+        SYNTAX  DisplayString (SIZE (0..47))
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+                " "
+        ::= { emailRecipientEntry 2 }
+
+-- the agent syslog group
+
+adminSyslog OBJECT IDENTIFIER ::= { admin 19 }
+
+syslogOnOff OBJECT-TYPE
+        SYNTAX  INTEGER {
+                off(1),
+                on(2)
+                }
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+                " "
+        ::= { adminSyslog 1 }
+
+syslogSaveLogsToFlash OBJECT-TYPE
+        SYNTAX  INTEGER {
+                off(1),
+                on(2)
+                }
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+                " "
+        ::= { adminSyslog 2 }
+
+syslogClearAllLogs OBJECT-TYPE
+        SYNTAX  INTEGER {
+                none(1),
+                clear_all(2)
+                }
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+                " "
+        ::= { adminSyslog 3 }
+
+syslogServerTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SyslogServerEntry
+        ACCESS  not-accessible
+        STATUS  mandatory
+        DESCRIPTION
+                " "
+        ::= { adminSyslog 4 }
+
+syslogServerEntry OBJECT-TYPE
+        SYNTAX  SyslogServerEntry
+        ACCESS  not-accessible
+        STATUS  mandatory
+        DESCRIPTION
+                " "
+        INDEX { serverIndex }
+        ::= { syslogServerTable 1 }
+
+SyslogServerEntry ::= SEQUENCE {
+        serverIndex            INTEGER,
+        serverIpAddr           IpAddress
+        }
+
+serverIndex OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+                " "
+        ::= { syslogServerEntry 1 }
+
+serverIpAddr OBJECT-TYPE
+        SYNTAX  IpAddress
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+                " "
+        ::= { syslogServerEntry 2 }
+
+-- the agent secure ip group
+
+adminSecureIp OBJECT IDENTIFIER ::= { admin 20 }
+
+adminSecureIpOnOff OBJECT-TYPE
+        SYNTAX  INTEGER {
+                off(1),
+                on(2)
+                }
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+                " "
+        ::= { adminSecureIp 1 }
+
+adminSecureIpTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF AdminSecureIpEntry
+        ACCESS  not-accessible
+        STATUS  mandatory
+        DESCRIPTION
+                " "
+        ::= { adminSecureIp 2 }
+
+adminSecureIpEntry OBJECT-TYPE
+        SYNTAX  AdminSecureIpEntry
+        ACCESS  not-accessible
+        STATUS  mandatory
+        DESCRIPTION
+                " "
+        INDEX { secureIpIndex }
+        ::= { adminSecureIpTable 1 }
+
+AdminSecureIpEntry ::= SEQUENCE {
+        secureIpIndex            INTEGER,
+        secureIpAddr             IpAddress
+        }
+
+secureIpIndex OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+                " "
+        ::= { adminSecureIpEntry 1 }
+
+secureIpAddr OBJECT-TYPE
+        SYNTAX  IpAddress
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+                " "
+        ::= { adminSecureIpEntry 2 }
+
+-- the agent ntp group
+
+adminTime OBJECT IDENTIFIER ::= { admin 21 }
+
+timeNtpClientOnOff OBJECT-TYPE
+        SYNTAX  INTEGER {
+                off(1),
+                on(2)
+                }
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+                " "
+        ::= { adminTime 1 }
+
+timeNtpServerIpAddr OBJECT-TYPE
+        SYNTAX  IpAddress
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+                " "
+        ::= { adminTime 2 }
+
+timeNtpUpdateInterval OBJECT-TYPE
+        SYNTAX  INTEGER (60..86400)
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+                "unit is second"
+        ::= { adminTime 3 }
+
+timeZoneName OBJECT-TYPE
+        SYNTAX  DisplayString (SIZE (0..8))
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+                " "
+        ::= { adminTime 4 }
+
+timeZoneHoursOffsetWithGMT OBJECT-TYPE
+        SYNTAX  INTEGER (-23..23)
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+                " "
+        ::= { adminTime 5 }
+
+timeZoneMinutesOffsetWithGMT OBJECT-TYPE
+        SYNTAX  INTEGER (0..59)
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+                " "
+        ::= { adminTime 6 }
+
+timeSummerTime OBJECT-TYPE
+        SYNTAX  INTEGER {
+                no_summer_time(1),
+                first_Sun_Apr_2am_last_Sun_Oct_2am(2),
+                last_Sun_Mar_2am_last_Sun_Oct_3am(3),
+                manual(4)
+                }
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+                " "
+        ::= { adminTime 7 }
+
+timeSummerTimeBeginMonth OBJECT-TYPE
+        SYNTAX  INTEGER {
+                jan(1),
+                feb(2),
+                mar(3),
+                apr(4),
+                may(5),
+                jun(6),
+                jul(7),
+                aug(8),
+                sep(9),
+                oct(10),
+                nov(11),
+                dec(12)
+                }
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+                " "
+        ::= { adminTime 8 }
+
+timeSummerTimeBeginNth OBJECT-TYPE
+        SYNTAX  INTEGER {
+                first(1),
+                second(2),
+                third(3),
+                fourth(4),
+                last(5)
+                }
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+                " "
+        ::= { adminTime 9 }
+
+timeSummerTimeBeginWeekday OBJECT-TYPE
+        SYNTAX  INTEGER {
+                sun(1),
+                mon(2),
+                tue(3),
+                wed(4),
+                thu(5),
+                fri(6),
+                sat(7)
+                }
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+                " "
+        ::= { adminTime 10 }
+
+timeSummerTimeBeginHour OBJECT-TYPE
+        SYNTAX  INTEGER (0..23)
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+                " "
+        ::= { adminTime 11 }
+
+timeSummerTimeBeginMinute OBJECT-TYPE
+        SYNTAX  INTEGER (0..59)
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+                " "
+        ::= { adminTime 12 }
+
+timeSummerTimeEndMonth OBJECT-TYPE
+        SYNTAX  INTEGER {
+                jan(1),
+                feb(2),
+                mar(3),
+                apr(4),
+                may(5),
+                jun(6),
+                jul(7),
+                aug(8),
+                sep(9),
+                oct(10),
+                nov(11),
+                dec(12)
+                }
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+                " "
+        ::= { adminTime 13 }
+
+timeSummerTimeEndNth OBJECT-TYPE
+        SYNTAX  INTEGER {
+                first(1),
+                second(2),
+                third(3),
+                fourth(4),
+                last(5)
+                }
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+                " "
+        ::= { adminTime 14 }
+
+timeSummerTimeEndWeekday OBJECT-TYPE
+        SYNTAX  INTEGER {
+                sun(1),
+                mon(2),
+                tue(3),
+                wed(4),
+                thu(5),
+                fri(6),
+                sat(7)
+                }
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+                " "
+        ::= { adminTime 15 }
+
+timeSummerTimeEndHour OBJECT-TYPE
+        SYNTAX  INTEGER (0..23)
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+                " "
+        ::= { adminTime 16 }
+
+timeSummerTimeEndMinute OBJECT-TYPE
+        SYNTAX  INTEGER (0..59)
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+                " "
+        ::= { adminTime 17 }
+
+adminSaveRunningCfg OBJECT-TYPE
+        SYNTAX  INTEGER {
+                none(1),
+                saveConfiguration(2)
+                }
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+              "Set this variable will save current configuration.
+              the value will be reset to 1 after succeed."
+        ::= { admin 22 }
+
+adminResetDefault OBJECT IDENTIFIER ::= { admin 23 }
+
+resetKeepingCurrentIP OBJECT-TYPE
+        SYNTAX  INTEGER {
+                none(1),
+                keepCurrentIP(2)
+                }
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+              "Set this variable will keep current IP configuration
+               (IP address, Subnet Mask, Default Gateway and Domain Name Servers).
+              the value will be reset to 1 after succeed."
+        ::= { adminResetDefault 1 }
+
+resetKeepingCurrentSNMP OBJECT-TYPE
+        SYNTAX  INTEGER {
+                none(1),
+                keepCurrentSNMP(2)
+                }
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+              "Set this variable will keep current SNMP settings
+              (System information, SNMP communities and SNMP Trap information).
+              the value will be reset to 1 after succeed."
+        ::= { adminResetDefault 2 }
+
+resetKeepingCurrentVLAN OBJECT-TYPE
+        SYNTAX  INTEGER {
+                none(1),
+                keepCurrentVLAN(2)
+                }
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+              "Set this variable will keep current VLAN settings.
+              the value will be reset to 1 after succeed."
+        ::= { adminResetDefault 3 }
+
+resetKeepingCurrentUser OBJECT-TYPE
+        SYNTAX  INTEGER {
+                none(1),
+                keepCurrentUser(2)
+                }
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+              "Set this variable will keep current User settings.
+              the value will be reset to 1 after succeed."
+        ::= { adminResetDefault 4 }
+
+resetFactoryConfiguration OBJECT-TYPE
+        SYNTAX  INTEGER {
+                none(1),
+                factoryDefault(2)
+                }
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+              "Set this variable will use factory default configuration and reload.
+              the value will be reset to 1 after succeed."
+        ::= { adminResetDefault 5 }
+
+adminReloadSystem OBJECT-TYPE
+        SYNTAX  INTEGER {
+                none(1),
+                reloadSystem(2)
+                }
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+              "Set this variable will reload system.
+              the value will be reset to 1 after succeed."
+        ::= { admin 24 }
+
+adminTftpUpgrade OBJECT IDENTIFIER ::= { admin 25 }
+
+upgradeTftpServerIpAddr OBJECT-TYPE
+        SYNTAX  IpAddress
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+              "Specify the IP address of the TFTP server where the binary
+              code is stored."
+        ::= { adminTftpUpgrade 1 }
+
+upgradeFileName OBJECT-TYPE
+        SYNTAX  DisplayString (SIZE (0..31))
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+              "Specify the file name of the binary code to be upgraded."
+        ::= { adminTftpUpgrade 2 }
+
+upgradeState OBJECT-TYPE
+        SYNTAX  INTEGER {
+                none(1),
+                start(2),
+                inProgress(3)
+                }
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+              "Set the variable 1 will start the upgrade process."
+        ::= { adminTftpUpgrade 3 }
+
+adminCATVPower OBJECT-TYPE
+        SYNTAX  INTEGER {
+                off(1),
+                on(2)
+                }
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+              "Set this variable will switch CATV Power off or on."
+        ::= { admin 26 }
+
+
+END

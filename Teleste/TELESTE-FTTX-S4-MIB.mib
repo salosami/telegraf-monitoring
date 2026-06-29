@@ -1,0 +1,125 @@
+TELESTE-FTTX-S4-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+    DisplayString, PhysAddress
+      FROM RFC-1213
+  	switch
+      FROM TELESTE-FTTX-ROOT-MIB;
+
+-- v1.0 2008-11-04 - salmra
+
+s4                OBJECT IDENTIFIER ::= { switch 4 }
+
+-- port table
+
+portTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF PortEntry
+        ACCESS  not-accessible
+        STATUS  mandatory
+        DESCRIPTION
+                "A list of interface entries."
+        ::= { s4 4 }
+
+portEntry OBJECT-TYPE
+        SYNTAX  PortEntry
+        ACCESS  not-accessible
+        STATUS  mandatory
+        DESCRIPTION
+                "A port entry containing objects
+                below for a port."
+        INDEX { portId }
+        ::= { portTable 1 }
+
+PortEntry ::= SEQUENCE {
+        portId             INTEGER,
+        portEnabled        INTEGER,
+        portLink           INTEGER,
+        portAutoOrForced   INTEGER,
+        portSpeed          INTEGER,
+        portDuplex         INTEGER,
+        portName           DisplayString
+        }
+
+portId OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+                "A unique value for each interface."
+        ::= { portEntry 1 }
+
+portEnabled OBJECT-TYPE
+        SYNTAX  INTEGER {
+                disabled(1),
+                enabled(2)
+                }
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+                "Indicate the state of this port
+                disabled (will not receive or transmit any frames)
+                or enabled."
+        ::= { portEntry 2 }
+
+portLink OBJECT-TYPE
+        SYNTAX  INTEGER {
+                down(1),
+                up(2)
+                }
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+                "Indicate the link status of this port
+                down or up."
+        ::= { portEntry 3 }
+
+portAutoOrForced OBJECT-TYPE
+        SYNTAX  INTEGER {
+                auto_neg(1),
+                forced_10_full(2),
+                forced_10_half(3),
+                forced_100_full(4),
+                forced_100_half(5),
+                forced_1000_full(6),
+                forced_1000_half(7)
+                }
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+                "Indicate the auto negotiation ability on or off."
+        ::= { portEntry 4 }
+
+portSpeed OBJECT-TYPE
+        SYNTAX  INTEGER {
+                speed_10M(1),
+                speed_100M(2),
+                speed_1000M(3)
+                }
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+                "Indicate the speed of this port
+                10M, 100M or 1G bits per second."
+        ::= { portEntry 5 }
+
+portDuplex OBJECT-TYPE
+        SYNTAX  INTEGER {
+                half(1),
+                full(2)
+                }
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+                "Indicate the duplex mode of this port
+                half or full."
+        ::= { portEntry 6 }
+
+portName OBJECT-TYPE
+        SYNTAX  DisplayString (SIZE (0..31))
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+                "The name of this port."
+        ::= { portEntry 7 }
+
+END

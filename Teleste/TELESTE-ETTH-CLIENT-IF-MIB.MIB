@@ -1,0 +1,553 @@
+--
+-- TELESTE-ETTH-CLIENT-IF-MIB.mib
+-- *****************************************************************************
+-- Copyright (c) 2006 by:
+-- 
+-- Teleste Corporation
+-- Seponkatu 1
+-- FIN-20660 Littoinen, Finland
+-- tel. +358 2 2605 611
+-- url: http://www.teleste.com
+-- 
+-- Description: Ethernet to home (EttH) private MIB.
+-- 
+-- 
+-- ****************************************************************************
+-- 
+
+
+	TELESTE-ETTH-CLIENT-IF-MIB DEFINITIONS ::= BEGIN
+ 
+		IMPORTS
+			OBJECT-TYPE			
+				FROM RFC-1212			
+			DisplayString			
+				FROM RFC1213-MIB	
+			etthMIB		
+				FROM TELESTE-ETTH-MIB 
+			TimeStamp
+			    FROM SNMPv2-TC 		
+			etth, TPhysAddress		
+				FROM TELESTE-ROOT-MIB;
+			
+etthClientIfMIB MODULE-IDENTITY
+        LAST-UPDATED "200712110000Z" -- 
+        ORGANIZATION "Teleste Corporation"
+        CONTACT-INFO
+	        "Teleste Corporation
+             Seponkatu 1
+             FIN-20660 Littoinen, Finland
+             tel. +358 2 2605 611
+             url: http://www.teleste.com"
+		DESCRIPTION
+      		"Ethernet to home (EttH) client interfaces private MIB." 
+      		
+      	REVISION        "200708240000Z"
+    	DESCRIPTION
+            "Initial Version of this MIB module."    
+            
+        REVISION        "200711200000Z"
+    	DESCRIPTION
+            "Loop detection settings added."   
+            
+        REVISION        "200712110000Z"
+    	DESCRIPTION
+            "Loop detection settings modified." 
+
+
+	::= { etthMIB 10 }    
+    
+		etthClientIfObjects OBJECT IDENTIFIER ::= { etthClientIfMIB 1 } 
+		
+		--
+-- etthClientIfTable
+--           
+		etthClientIfTable OBJECT-TYPE
+			SYNTAX SEQUENCE OF EtthClientIfEntry
+			ACCESS not-accessible
+			STATUS mandatory
+			DESCRIPTION
+				"This table contains attributes for device's client interfaces."
+			::= { etthClientIfObjects 1 }
+
+		etthClientIfEntry OBJECT-TYPE
+			SYNTAX EtthClientIfEntry
+			ACCESS not-accessible
+			STATUS mandatory   
+			DESCRIPTION
+				"Contains attributes for a single client interface."
+			INDEX { etthClientIf }
+			::= { etthClientIfTable 1 }
+
+
+		EtthClientIfEntry ::=
+			SEQUENCE { 
+				etthClientIf
+					INTEGER,   
+				etthClientIfIndex
+					INTEGER,  
+				etthClientIfAdminStatus
+					INTEGER, 
+--				etthClientIfSwitchingMode
+--					INTEGER, 
+				etthClientIfReset
+					INTEGER
+			 }    
+			 
+		etthClientIf OBJECT-TYPE
+			SYNTAX INTEGER	
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"The client interface number of this interface."
+			::= { etthClientIfEntry 1 }    
+			
+		etthClientIfIndex OBJECT-TYPE
+			SYNTAX INTEGER	
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"The interface identified by a particular value of this index is the same
+				 interface as identified by the same value of RFC 1573's ifIndex."
+			::= { etthClientIfEntry 2 } 
+              
+         etthClientIfAdminStatus OBJECT-TYPE
+			SYNTAX INTEGER
+				{
+				up(1),
+				down(2)
+				}
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"Current admin status of the interface."
+			::= { etthClientIfEntry 3 } 
+			
+--		etthClientIfSwitchingMode OBJECT-TYPE
+--			SYNTAX INTEGER
+--				{
+--				automatic(1),
+--				disabled(2),
+--				fallback(3),
+--				secure(4)   
+--				enhanced_portbased(5)
+--				}
+--			ACCESS read-write
+--			STATUS optional
+--			DESCRIPTION
+--				"Switching mode of the interface."
+--			::= { etthClientIfEntry 4 }
+
+         etthClientIfReset OBJECT-TYPE
+			SYNTAX INTEGER
+				{
+				noReset(1),
+				reset(2)
+				}
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"On write requests this object commands the device to 
+				 to reset client interface.
+				 
+				 On read requests value noReset(1) is returned."
+			::= { etthClientIfEntry 5 } 
+         	
+-- 
+-- This table contains interface speed and status counters.
+-- 
+		etthClientIfSpeedTable OBJECT-TYPE
+			SYNTAX SEQUENCE OF EtthClientIfSpeedEntry
+			ACCESS not-accessible
+			STATUS mandatory
+			DESCRIPTION
+				"This table describes speed and status counters of client interfaces."
+			::= { etthClientIfObjects 2 }    
+			
+-- 
+-- A table of interface speed and status objects.
+-- 
+		etthClientIfSpeedEntry OBJECT-TYPE
+			SYNTAX EtthClientIfSpeedEntry
+			ACCESS not-accessible
+			STATUS mandatory
+			DESCRIPTION
+				"Describes speed and status counters of a single client interface."
+			INDEX { etthClientIf }
+			::= { etthClientIfSpeedTable 1 }
+
+		
+		EtthClientIfSpeedEntry ::=
+			SEQUENCE {
+				etthClientIfSpeedIndex 
+					INTEGER, 
+				etthClientIfSpeedBPS 
+					INTEGER, 
+				etthClientIfSpeedPPS 
+					INTEGER, 
+				etthClientIfSpeedEPS 
+					INTEGER, 
+				etthClientIfSpeedUtil
+					INTEGER			
+			 }     
+
+		etthClientIfSpeedIndex OBJECT-TYPE
+			SYNTAX INTEGER 		
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"The value of this object uniquely identifies this entry."
+			::= { etthClientIfSpeedEntry 1 }
+
+		etthClientIfSpeedBPS OBJECT-TYPE
+			SYNTAX INTEGER  
+			UNITS "bits per second"
+			ACCESS read-only
+			STATUS mandatory   
+			DESCRIPTION
+				"Client interface speed counter."
+			::= { etthClientIfSpeedEntry 2 } 
+				 
+		etthClientIfSpeedPPS OBJECT-TYPE
+			SYNTAX INTEGER 
+			UNITS "packets per second"
+			ACCESS read-only
+			STATUS mandatory    
+			DESCRIPTION
+				"Client interface packet counter."
+			::= { etthClientIfSpeedEntry 3 }    
+				 
+		etthClientIfSpeedEPS OBJECT-TYPE
+			SYNTAX INTEGER 
+			UNITS "errors per second"
+			ACCESS read-only
+			STATUS mandatory 
+			DESCRIPTION
+				"Client interface error counter."
+			::= { etthClientIfSpeedEntry 4 }
+				 
+		etthClientIfSpeedUtil OBJECT-TYPE
+			SYNTAX INTEGER
+			ACCESS read-only
+			STATUS mandatory   
+			DESCRIPTION
+				"Client interface utilisation percentage."
+			::= { etthClientIfSpeedEntry 5 }  
+                  
+              
+--
+-- etthClientIfMacLimitTable
+--                
+		etthClientIfMacLimitTable OBJECT-TYPE
+			SYNTAX SEQUENCE OF EtthClientIfMacLimitEntry
+			ACCESS not-accessible
+			STATUS mandatory
+			DESCRIPTION
+				"This table contains MAC limit entries for client interfaces."
+			::= { etthClientIfObjects 3 }
+
+		
+		etthClientIfMacLimitEntry OBJECT-TYPE
+			SYNTAX EtthClientIfMacLimitEntry
+			ACCESS not-accessible
+			STATUS mandatory             
+			DESCRIPTION
+				"Describes objects for limiting the maximum number of MAC addresses of a client interface."
+			INDEX { etthClientIf }
+			::= { etthClientIfMacLimitTable 1 }
+
+		
+		EtthClientIfMacLimitEntry ::=
+			SEQUENCE { 
+				etthClientIfMacLimit
+					INTEGER
+			 }       
+						
+		etthClientIfMacLimit OBJECT-TYPE
+			SYNTAX INTEGER	
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"Maximum number of MAC addresses allowed. Zero value means no MAC limit."
+
+			::= { etthClientIfMacLimitEntry 1 }  
+			
+			
+-- 
+-- This table contains CPE status objects for device instances.
+-- 
+		etthClientIfCpeTable OBJECT-TYPE
+			SYNTAX SEQUENCE OF EtthClientIfCpeEntry
+			ACCESS not-accessible
+			STATUS mandatory
+			DESCRIPTION
+				"This table contains Cpe status objects for a single device."
+			::= { etthClientIfObjects 4 }    
+			
+-- 
+-- A table of Cpe status objects.
+-- 
+		etthClientIfCpeEntry OBJECT-TYPE
+			SYNTAX EtthClientIfCpeEntry
+			ACCESS not-accessible
+			STATUS mandatory
+			DESCRIPTION
+				"Describes a single Cpe status object."
+			INDEX { etthClientIfCpeIndex }
+			::= { etthClientIfCpeTable 1 }
+
+		
+		EtthClientIfCpeEntry ::=
+			SEQUENCE {     
+				etthClientIfCpeIndex
+					INTEGER,
+				etthClientIfCpeIfIndex
+					INTEGER,
+				etthClientIfCpeMACAddress
+					TPhysAddress,
+				etthClientIfCpeIPAddress
+					DisplayString,
+				etthClientIfCpeDHCPLease
+					TimeStamp,
+                etthClientIfCpeActive
+                	INTEGER
+			 }   
+			 
+		etthClientIfCpeIndex OBJECT-TYPE
+			SYNTAX INTEGER 		
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"The value of this object uniquely identifies this entry."
+			::= { etthClientIfCpeEntry 1 }
+         
+        etthClientIfCpeIfIndex OBJECT-TYPE
+			SYNTAX INTEGER 		
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"The interface where the Cpe is connected. Same as etthClientIfTable.etthClientIf."
+			::= { etthClientIfCpeEntry 2 }
+			 										
+		etthClientIfCpeMACAddress OBJECT-TYPE
+			SYNTAX TPhysAddress
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"MAC address of the Cpe."
+			::= { etthClientIfCpeEntry 3 }
+					
+		etthClientIfCpeIPAddress OBJECT-TYPE
+			SYNTAX DisplayString
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"IP address of the Cpe."
+			::= { etthClientIfCpeEntry 4 }
+						
+		etthClientIfCpeDHCPLease OBJECT-TYPE
+			SYNTAX TimeStamp 
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"DHCP lease for Cpe's IP address. Value shows time left before the lease expires."
+			::= { etthClientIfCpeEntry 5 } 
+			
+		etthClientIfCpeActive OBJECT-TYPE
+			SYNTAX INTEGER  
+			{     
+				no(0),
+				yes(1)
+			}			
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"Determines if the Cpe is active."
+			::= { etthClientIfCpeEntry 6 }  
+			
+--
+-- etthClientIfRateLimitTable
+--           
+		etthClientIfRateLimitTable OBJECT-TYPE
+			SYNTAX SEQUENCE OF EtthClientIfRateLimitEntry
+			ACCESS not-accessible
+			STATUS mandatory
+			DESCRIPTION
+				"This table contains entries for limiting client interfaces' upstream and downstream rates."
+			::= { etthClientIfObjects 5 }
+
+		etthClientIfRateLimitEntry OBJECT-TYPE
+			SYNTAX EtthClientIfRateLimitEntry
+			ACCESS not-accessible
+			STATUS mandatory    
+			DESCRIPTION
+				"Describes objects for limiting upstream and downstream rate of a single client interface."
+			INDEX { etthClientIf }
+			::= { etthClientIfRateLimitTable 1 }
+
+
+		EtthClientIfRateLimitEntry ::=
+			SEQUENCE { 
+				etthClientIfRLDownstreamRate
+					INTEGER, 
+				etthClientIfRLUpstreamRate
+					INTEGER
+			 }   
+			  			
+		etthClientIfRLDownstreamRate OBJECT-TYPE
+			SYNTAX INTEGER	 
+			UNITS "kbits per second"
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"Maximum allowed downstream rate. Zero value means no rate limit."
+			::= { etthClientIfRateLimitEntry 3 } 
+			
+		etthClientIfRLUpstreamRate OBJECT-TYPE
+			SYNTAX INTEGER	 
+			UNITS "kbits per second"
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"Maximum allowed upstream rate. Zero value means no rate limit."
+			::= { etthClientIfRateLimitEntry 4 } 
+ 
+--
+-- etthClientIfLoopDetection
+--   
+          etthClientIfLoopDetectionActive OBJECT-TYPE
+			SYNTAX INTEGER	
+				{
+				off(1),
+				on(2)
+				}		
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"Enables/disables active loop detection."
+			::= { etthClientIfObjects 6 }
+
+ 
+--
+-- etthClientIfLoopDetectionTable
+--           
+		etthClientIfLoopDetectionTable OBJECT-TYPE
+			SYNTAX SEQUENCE OF EtthClientIfLoopDetectionEntry
+			ACCESS not-accessible
+			STATUS mandatory
+			DESCRIPTION
+				"This table contains entries for client interfaces' loop detection objects."
+			::= { etthClientIfObjects 7 }
+
+		etthClientIfLoopDetectionEntry OBJECT-TYPE
+			SYNTAX EtthClientIfLoopDetectionEntry
+			ACCESS not-accessible
+			STATUS mandatory    
+			DESCRIPTION
+				"Describes objects for loop detection objects of a single client interface."
+			INDEX { etthClientIf }
+			::= { etthClientIfLoopDetectionTable 1 }
+
+
+		EtthClientIfLoopDetectionEntry ::=
+			SEQUENCE { 	
+				etthClientIfLDStatus
+					INTEGER, 			
+				etthClientIfLDTimeout
+					INTEGER,   
+				etthClientIfLDShutdown
+					INTEGER, 
+				etthClientIfLDLoopStatus
+					INTEGER,   
+				etthClientIfLDTimeRemaining
+					INTEGER,
+				etthClientIfLDReset
+					INTEGER
+			} 
+			
+		etthClientIfLDStatus OBJECT-TYPE
+			SYNTAX INTEGER	 
+			{
+				disabled(1),
+				enabled(2)
+			}			
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"Specifies the status of the passive loop detection for this interface."
+			::= { etthClientIfLoopDetectionEntry 1 }			
+			
+		etthClientIfLDTimeout OBJECT-TYPE
+			SYNTAX INTEGER	
+			UNITS "minutes"
+			ACCESS read-write
+			STATUS mandatory   
+			DESCRIPTION
+				"Specifies the loop detection timeout status of the client interface. 
+				 
+				 If set to 0 the interface is not automatically enabled. 
+				 If set 1 or greater the interface is enabled automatically after the specified number of
+				 minutes has passed."
+			::= { etthClientIfLoopDetectionEntry 2 }    
+						 
+		etthClientIfLDShutdown OBJECT-TYPE
+			SYNTAX INTEGER	 
+			{
+				disabled(1),
+				enabled(2)
+			}			
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"Specifies the loop detection shutdown status of the client interface. 
+				 
+				 If enabled, the interface is shut down automatically when a loop is detected."
+			::= { etthClientIfLoopDetectionEntry 3 }   
+			
+		etthClientIfLDLoopStatus OBJECT-TYPE			
+			SYNTAX INTEGER
+			 {
+			  	no-loop-detected(1),
+			  	loop-detected-active(2),
+			  	loop-detected-passive(3),
+			  	loop-detected-both(4)
+			}	 			
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"Specifies the loop detection status of the client interface. 
+				
+				Value 1 means no loop detected.
+				Value 2 means loop detected by active algorithm.
+				Value 3 means loop detected by passive algorithm.
+				Value 4 means loop detected by both active and passive algorithms."
+			::= { etthClientIfLoopDetectionEntry 4 }   
+			
+		etthClientIfLDTimeRemaining OBJECT-TYPE
+			SYNTAX INTEGER	
+			UNITS "minutes"		
+			ACCESS read-only
+			STATUS mandatory   
+			DESCRIPTION
+				"Specifies the number of minutes until this interface is enabled. 
+				 "
+			::= { etthClientIfLoopDetectionEntry 5 }     
+			
+		etthClientIfLDReset OBJECT-TYPE			
+			SYNTAX INTEGER
+			 {
+			  	noReset(1),
+			  	doReset(2)
+			 }	 			
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"On doReset(2) clears loop detection status for interface and resets shutdown status.
+				Enables interface immediately if it was shutdown because of a detected loop."
+			::= { etthClientIfLoopDetectionEntry 6 } 
+ 
+    
+END
+--
+-- TELESTE-ETTH-CLIENT-IF-MIB.mib
+--

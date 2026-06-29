@@ -1,0 +1,1560 @@
+--
+-- DS2 WISCONSIN MIB version 1.2.7 
+--                                
+--           E.Izquierdo, S.Rodriguez, V.Esteve
+--
+
+DS2-WISCONSIN-MIB DEFINITIONS ::= BEGIN
+
+          IMPORTS
+       NetworkAddress, IpAddress, Counter, Gauge, TimeTicks
+                      FROM RFC1155-SMI
+		  OBJECT-TYPE,
+                      FROM RFC-1212
+      STATUS,
+                      FROM SNMPv2-SMI
+      PhysAddress,
+                      FROM RFC1213-MIB;
+			  
+iso         OBJECT IDENTIFIER ::= { 1 }
+org         OBJECT IDENTIFIER ::= { iso 3 }
+dod         OBJECT IDENTIFIER ::= { org 6 }
+internet    OBJECT IDENTIFIER ::= { dod 1 }
+private     OBJECT IDENTIFIER ::= { internet 4 }
+enterprises OBJECT IDENTIFIER ::= { private 1 }
+ds2         OBJECT IDENTIFIER ::= { enterprises 6798 }
+wisconsin   OBJECT IDENTIFIER ::= { ds2 3 }
+
+
+--
+-- Object definition
+--
+-- Groups in ds2.wisconsin
+
+plWiscSystem       OBJECT IDENTIFIER ::= {wisconsin 1}
+plWiscBasic        OBJECT IDENTIFIER ::= {wisconsin 2}
+plWiscPhy          OBJECT IDENTIFIER ::= {wisconsin 3}
+plWiscMAC          OBJECT IDENTIFIER ::= {wisconsin 4}
+plWiscQoS          OBJECT IDENTIFIER ::= {wisconsin 5}
+plWiscOVLAN        OBJECT IDENTIFIER ::= {wisconsin 6}
+plWiscStatistics   OBJECT IDENTIFIER ::= {wisconsin 7}
+plWiscTraps        OBJECT IDENTIFIER ::= {wisconsin 8}
+plWiscVoIP         OBJECT IDENTIFIER ::= {wisconsin 9}
+plWiscStp          OBJECT IDENTIFIER ::= {wisconsin 10}
+
+
+--
+-- Groups definition
+--
+
+
+--
+-- The plWiscSystem Group
+--
+
+
+plSystemTable   OBJECT-TYPE
+    SYNTAX      SEQUENCE OF PlSystemEntry
+    ACCESS      not-accessible
+    STATUS      current
+    DESCRIPTION "Generic information about the Wisconsin system."
+    ::= { plWiscSystem 1 }
+
+    plSystemEntry   OBJECT-TYPE
+        SYNTAX      PlSystemEntry
+        ACCESS      not-accessible
+        STATUS      current
+        DESCRIPTION "System information gathered per card."
+        INDEX       { plSysCard }
+        ::= { plSystemTable 1 }
+
+    PlSystemEntry ::= SEQUENCE { plSysCard		INTEGER,
+                                 plSysNodeType          INTEGER,
+                                 plSysNodeMode          INTEGER,
+                                 plSysSNMPAgentVersion  OCTET STRING (SIZE(0..128)),
+                                 plSysFWVersion         OCTET STRING (SIZE(0..128)),
+                                 plSysHWVersion         OCTET STRING (SIZE(0..128)),
+                                 plSysReset             INTEGER,
+                                 plSysFactoryReset      INTEGER,
+                                 plSysUseDHCP           INTEGER,
+                                 plSysStaticIPAddress   IpAddress,
+                                 plSysStaticNetMask     IpAddress,
+                                 plSysStaticDefaultGW   IpAddress,
+                                 plSysIPv6              INTEGER,
+                                 plSysSaveAsPermanent   INTEGER,
+                                 plSysConfUploadConf    OCTET STRING (SIZE (0..256)),
+                                 plSysConfDownloadConf  OCTET STRING (SIZE (0..256)),
+                                 plSysConfNVRAM         OCTET STRING (SIZE (0..256)),
+                                 plSysUpdateFW          OCTET STRING (SIZE(0..256)),
+                                 plSysUpgradeStatus     INTEGER,
+                                 plSysTemp              INTEGER,
+                                 plSysUpdateLoader      OCTET STRING (SIZE(0..256)),
+                                 plSysUpdateFlashSection OCTET STRING (SIZE(0..256)),
+                                 plSysUpgradeProgress   OCTET STRING (SIZE(0..128)),
+                                 plSysHWProduct         OCTET STRING (SIZE(0..128)),
+                                 plSysASICType          INTEGER
+                               }
+
+    plSysCard            OBJECT-TYPE
+    SYNTAX               INTEGER
+    ACCESS               read-only
+    STATUS               current
+    DESCRIPTION          "Node card number"
+    ::= { plSystemEntry 1 }
+    
+    plSysNodeType        OBJECT-TYPE
+    SYNTAX               INTEGER
+    ACCESS               read-write
+    STATUS               current
+    DESCRIPTION          "Node type: master   -> 0
+                                     slave    -> 1
+                                     repeater -> 2"
+    ::= { plSystemEntry 2 }
+
+    plSysNodeMode        OBJECT-TYPE
+    SYNTAX               INTEGER
+    ACCESS               read-write
+    STATUS               current
+    DESCRIPTION          "Node mode: access  -> 0
+                                     in-home -> 1"
+    ::= { plSystemEntry 3 }
+
+    plSysSNMPAgentVersion   OBJECT-TYPE
+    SYNTAX                  OCTET STRING (SIZE(0..128))
+    ACCESS                  read-only
+    STATUS                  current
+    DESCRIPTION             "SNMP Agent Version"
+    ::= { plSystemEntry 4 }
+
+    plSysFWVersion       OBJECT-TYPE
+    SYNTAX               OCTET STRING (SIZE(0..128))
+    ACCESS               read-only
+    STATUS               current
+    DESCRIPTION          "Firmware version"
+    ::= { plSystemEntry 5 }
+
+    plSysHWVersion       OBJECT-TYPE
+    SYNTAX               OCTET STRING (SIZE(0..128))
+    ACCESS               read-only
+    STATUS               current
+    DESCRIPTION          "Hardware version"
+    ::= { plSystemEntry 6 }
+    
+    plSysReset           OBJECT-TYPE
+    SYNTAX               INTEGER
+    ACCESS               read-write
+    STATUS               current
+    DESCRIPTION          "System reset"
+    ::= { plSystemEntry 7 }
+
+    plSysFactoryReset    OBJECT-TYPE
+    SYNTAX               INTEGER
+    ACCESS               read-write
+    STATUS               current
+    DESCRIPTION          "Restore factory parameters"
+    ::= { plSystemEntry 8 }
+
+    plSysUseDHCP         OBJECT-TYPE
+    SYNTAX               INTEGER
+    ACCESS               read-write
+    STATUS               current
+    DESCRIPTION          "Use DHCP (1) or a fixed IP, netmask and gateway (0) instead"
+    ::= { plSystemEntry 9 }
+
+    plSysStaticIPAddress   OBJECT-TYPE
+    SYNTAX                 IpAddress
+    ACCESS                 read-write
+    STATUS                 current
+    DESCRIPTION            "Default IP address if DHCP is disabled"
+    ::= { plSystemEntry 10 }
+
+    plSysStaticNetMask     OBJECT-TYPE
+    SYNTAX                 IpAddress
+    ACCESS                 read-write
+    STATUS                 current
+    DESCRIPTION            "Default netmask if DHCP is disabled"
+    ::= { plSystemEntry 11 }
+
+    plSysStaticDefaultGW   OBJECT-TYPE
+    SYNTAX                 IpAddress
+    ACCESS                 read-write
+    STATUS                 current
+    DESCRIPTION            "Default gateway if DHCP is disabled"
+    ::= { plSystemEntry 12 }
+
+    plSysIPv6              OBJECT-TYPE
+    SYNTAX                 INTEGER
+    ACCESS                 read-write
+    STATUS                 current
+    DESCRIPTION            "Node uses IPv6 (1) or not (0)"
+    ::= { plSystemEntry 13 }
+
+    plSysSaveAsPermanent   OBJECT-TYPE
+    SYNTAX                 INTEGER
+    ACCESS                 read-write
+    STATUS                 current
+    DESCRIPTION            "Saves changed objects as permanent"
+    ::= { plSystemEntry 14 }
+    
+    plSysConfUploadConf    OBJECT-TYPE
+    SYNTAX                 OCTET STRING (SIZE(0..256))
+    ACCESS                 read-write
+    STATUS                 current
+    DESCRIPTION            "Uploads node local configuration to a server"
+    ::= { plSystemEntry 15 }
+
+    plSysConfDownloadConf  OBJECT-TYPE
+    SYNTAX                 OCTET STRING (SIZE(0..256))
+    ACCESS                 read-write
+    STATUS                 current
+    DESCRIPTION            "Forces a configuration file download"
+    ::= { plSystemEntry 16 }
+
+    plSysConfNVRAM         OBJECT-TYPE
+    SYNTAX                 OCTET STRING (SIZE(0..256))
+    ACCESS                 read-write
+    STATUS                 current
+    DESCRIPTION            "Uploads a file with the raw contents of the NVRAM"
+    ::= { plSystemEntry 17 }
+
+    plSysUpdateFW          OBJECT-TYPE
+    SYNTAX                 OCTET STRING (SIZE(0..256))
+    ACCESS                 read-write
+    STATUS                 current
+    DESCRIPTION            "Updates the flash firmware section of a modem"
+    ::= { plSystemEntry 18 }
+    
+    plSysUpgradeStatus     OBJECT-TYPE
+    SYNTAX                 INTEGER
+    ACCESS                 read-only
+    STATUS                 current
+    DESCRIPTION            "Status of the current upgrade: finished KO        -> 0
+                                                           finished OK        -> 1
+			                                   busy (in progress) -> 2"
+    ::= { plSystemEntry 19 }
+
+    plSysTemp              OBJECT-TYPE
+    SYNTAX                 INTEGER
+    ACCESS                 read-only
+    STATUS                 current
+    DESCRIPTION            "Gets the measured temperature"
+    ::= { plSystemEntry 20 }
+    
+    plSysUpdateLoader      OBJECT-TYPE
+    SYNTAX                 OCTET STRING (SIZE(0..256))
+    ACCESS                 read-write
+    STATUS                 current
+    DESCRIPTION            "Updates the flash loader section"
+    ::= { plSystemEntry 21 }
+
+    plSysUpdateFlashSection  OBJECT-TYPE
+    SYNTAX                 OCTET STRING (SIZE(0..256))
+    ACCESS                 read-write
+    STATUS                 current
+    DESCRIPTION            "Updates any flash section"
+    ::= { plSystemEntry 22 }
+    
+    plSysUpgradeProgress   OBJECT-TYPE
+    SYNTAX                 OCTET STRING (SIZE(0..128))
+    ACCESS                 read-only
+    STATUS                 current
+    DESCRIPTION            "Shows the progress of the current upgrade"
+    ::= { plSystemEntry 23 }
+    
+    plSysHWProduct         OBJECT-TYPE
+    SYNTAX                 OCTET STRING (SIZE(0..128))
+    ACCESS                 read-only
+    STATUS                 current
+    DESCRIPTION            "Hardware product"
+    ::= { plSystemEntry 24 }
+    
+    plSysASICType          OBJECT-TYPE
+    SYNTAX                 INTEGER 
+    ACCESS                 read-only
+    STATUS                 current
+    DESCRIPTION            "ASIC type in the modem"
+    ::= { plSystemEntry 25 }
+    
+
+plSystemFlashTable   OBJECT-TYPE
+    SYNTAX      SEQUENCE OF PlSystemFlashEntry
+    ACCESS      not-accessible
+    STATUS      current
+    DESCRIPTION "Information about flash sections in the system."
+    ::= { plWiscSystem 2 }
+
+    plSystemFlashEntry   OBJECT-TYPE
+        SYNTAX      PlSystemFlashEntry
+        ACCESS      not-accessible
+        STATUS      current
+        DESCRIPTION "Information about flash sections."
+        INDEX       { plSysFlCard,  plSysFlIndex }
+        ::= { plSystemFlashTable 1 }
+
+    PlSystemFlashEntry ::= SEQUENCE { plSysFlCard		     INTEGER,
+                                      plSysFlIndex       INTEGER,
+                                      plSysFlSectionName OCTET STRING (SIZE(0..128)),
+                                      plSysFlSWVersion   OCTET STRING (SIZE(0..128)),
+                                      plSysFlValidity    INTEGER,
+                                      plSysFlLastUpdated INTEGER,
+                                      plSysFlNextActive  INTEGER
+                                    }
+
+    plSysFlCard            OBJECT-TYPE
+    SYNTAX                 INTEGER
+    ACCESS                 read-only
+    STATUS                 current
+    DESCRIPTION            "Card number"
+    ::= { plSystemFlashEntry 1 }
+
+    plSysFlIndex            OBJECT-TYPE
+    SYNTAX                 INTEGER
+    ACCESS                 read-only
+    STATUS                 current
+    DESCRIPTION            "Section number"
+    ::= { plSystemFlashEntry 2 }
+
+    plSysFlSectionName     OBJECT-TYPE
+    SYNTAX                 OCTET STRING (SIZE(0..128))
+    ACCESS                 read-only
+    STATUS                 current
+    DESCRIPTION            "Section name"
+    ::= { plSystemFlashEntry 3 }
+    
+    plSysFlSWVersion       OBJECT-TYPE
+    SYNTAX                 OCTET STRING (SIZE(0..128))
+    ACCESS                 read-only
+    STATUS                 current
+    DESCRIPTION            "SW version of this section"
+    ::= { plSystemFlashEntry 4 }
+
+    plSysFlValidity        OBJECT-TYPE
+    SYNTAX                 INTEGER
+    ACCESS                 read-only
+    STATUS                 current
+    DESCRIPTION            "Validity of this section (1: valid)"
+    ::= { plSystemFlashEntry 5 }
+    
+    plSysFlLastUpdated     OBJECT-TYPE
+    SYNTAX                 INTEGER
+    ACCESS                 read-only
+    STATUS                 current
+    DESCRIPTION            "Whether this section is the last one updated of this type or not (1: last updated)"
+    ::= { plSystemFlashEntry 6 }
+    
+    plSysFlNextActive      OBJECT-TYPE
+    SYNTAX                 INTEGER
+    ACCESS                 read-only
+    STATUS                 current
+    DESCRIPTION            "Whether this section will be active after the next boot or not (1: next active)"
+    ::= { plSystemFlashEntry 7 }
+
+
+--
+-- The plWiscBasic Group
+--
+
+
+plBasicTable    OBJECT-TYPE
+    SYNTAX      SEQUENCE OF PlBasicEntry
+    ACCESS      not-accessible
+    STATUS      current
+    DESCRIPTION ""
+    ::= { plWiscBasic 1 }
+
+    plBasicEntry    OBJECT-TYPE
+        SYNTAX      PlBasicEntry
+        ACCESS      not-accessible
+        STATUS      current
+        DESCRIPTION ""
+        INDEX       { plBasicCard }
+        ::= { plBasicTable 1 }
+
+    PlBasicEntry ::= SEQUENCE {  plBasicCard                INTEGER,
+    			 plBasicMode                INTEGER,
+          plBasicCentralFrequency    INTEGER,
+				 plBasicBandwidth           INTEGER,
+				 plBasicSearchModes         OCTET STRING,
+                                 plBasicTXAGCEnable         INTEGER,
+                                 plBasicRXAGCEnable         INTEGER,
+                                 plBasicTXAGCGain           INTEGER,
+                                 plBasicRXAGCGain           INTEGER,
+				 plBasicTXPowerMaskLB        OCTET STRING ( SIZE ( 769 ) ),
+				 plBasicTXPowerMaskHB        OCTET STRING ( SIZE ( 769 ) ),
+				 plBasicMasterMAC            PhysAddress,
+         plBasicRawPowerMaskLB        OCTET STRING ( SIZE ( 769 ) ),
+         plBasicRawPowerMaskHB        OCTET STRING ( SIZE ( 769 ) ),
+         plBasicRawPMSaveAsPermanent  INTEGER,
+         plBasicRegPowerMaskClear    INTEGER,
+         plBasicRegPowerMaskEnable   INTEGER,
+         plBasicRegPMSaveAsPermanent INTEGER,
+         plBasicPowerMaskUpdate      INTEGER,
+         plBasicSubMode              INTEGER
+         }
+    
+    plBasicCard              OBJECT-TYPE
+    SYNTAX                   INTEGER
+    ACCESS                   read-only
+    STATUS                   current
+    DESCRIPTION              "Node card number"
+    ::= { plBasicEntry 1 }
+    
+    plBasicMode              OBJECT-TYPE
+    SYNTAX                   INTEGER
+    ACCESS                   read-write
+    STATUS                   current
+    DESCRIPTION              "Physical mode (1..M)"
+    ::= { plBasicEntry 2 }
+
+    plBasicCentralFrequency  OBJECT-TYPE
+    SYNTAX                   INTEGER
+    ACCESS                   read-write
+    STATUS                   current
+    DESCRIPTION              "Band Central Frequency in MHz"
+    ::= { plBasicEntry 3 }
+
+    plBasicBandwidth         OBJECT-TYPE
+    SYNTAX                   INTEGER
+    ACCESS                   read-write
+    STATUS                   current
+    DESCRIPTION              "Working Node Bandwidth in MHz"
+    ::= { plBasicEntry 4 }
+    
+    plBasicSearchModes       OBJECT-TYPE
+    SYNTAX                   OCTET STRING 
+    ACCESS                   read-write
+    STATUS                   current
+    DESCRIPTION              "List of modes used for searching"
+    ::= { plBasicEntry 5 }
+
+    plBasicTXAGCEnable       OBJECT-TYPE
+    SYNTAX                   INTEGER
+    ACCESS                   read-write
+    STATUS                   current
+    DESCRIPTION              "TX AGC: Enabled  -> 1
+                                      Disabled -> 0"
+    ::= { plBasicEntry 6 }
+
+    plBasicRXAGCEnable       OBJECT-TYPE
+    SYNTAX                   INTEGER
+    ACCESS                   read-write
+    STATUS                   current
+    DESCRIPTION              "RX AGC: Enabled  -> 1
+                                      Disabled -> 0"
+    ::= { plBasicEntry 7 }
+    
+    plBasicTXAGCGain         OBJECT-TYPE
+    SYNTAX                   INTEGER
+    ACCESS                   read-write
+    STATUS                   current
+    DESCRIPTION              "TX AGC Gain"
+    
+    ::= { plBasicEntry 8 }
+    
+    plBasicRXAGCGain         OBJECT-TYPE
+    SYNTAX                   INTEGER
+    ACCESS                   read-write
+    STATUS                   current
+    DESCRIPTION              "RX AGC Gain"
+    
+    ::= { plBasicEntry 9 }
+    
+    plBasicTXPowerMaskLB     OBJECT-TYPE
+    SYNTAX                   OCTET STRING ( SIZE ( 769 ) )
+    ACCESS                   read-only
+    STATUS                   current
+    DESCRIPTION              "Low Half Band Powermask"
+    ::= { plBasicEntry 10 }
+
+    plBasicTXPowerMaskHB     OBJECT-TYPE
+    SYNTAX                   OCTET STRING ( SIZE ( 769 ) )
+    ACCESS                   read-only
+    STATUS                   current
+    DESCRIPTION              "High Half Band Powermask"
+    ::= { plBasicEntry 11 }
+
+    plBasicMasterMAC         OBJECT-TYPE
+    SYNTAX                   PhysAddress
+    ACCESS                   read-only
+    STATUS                   current
+    DESCRIPTION              "MAC address of the master of current node"
+    ::= { plBasicEntry 12 }
+
+    plBasicRawPowerMaskLB     OBJECT-TYPE
+    SYNTAX                   OCTET STRING ( SIZE ( 769 ) )
+    ACCESS                   read-write
+    STATUS                   current
+    DESCRIPTION              "Low Half Band Raw Powermask"
+    ::= { plBasicEntry 13 }
+
+    plBasicRawPowerMaskHB     OBJECT-TYPE
+    SYNTAX                   OCTET STRING ( SIZE ( 769 ) )
+    ACCESS                   read-write
+    STATUS                   current
+    DESCRIPTION              "High Half Band Raw Powermask"
+    ::= { plBasicEntry 14 }
+
+    plBasicRawPMSaveAsPermanent   OBJECT-TYPE
+    SYNTAX                 INTEGER
+    ACCESS                 read-write
+    STATUS                 current
+    DESCRIPTION            "Saves Raw Power Mask as permanent"
+    ::= { plBasicEntry 15 }
+
+    plBasicRegPowerMaskClear   OBJECT-TYPE
+    SYNTAX                 INTEGER
+    ACCESS                 read-write
+    STATUS                 current
+    DESCRIPTION            "Clear the Regulation Power Mask (remove all the rows)"
+    ::= { plBasicEntry 16 }
+
+
+    plBasicRegPowerMaskEnable   OBJECT-TYPE
+    SYNTAX                 INTEGER
+    ACCESS                 read-write
+    STATUS                 current
+    DESCRIPTION            "Enable (1) / disable (0) the Regulation Power Mask"
+    ::= { plBasicEntry 17 }
+
+
+    plBasicRegPMSaveAsPermanent   OBJECT-TYPE
+    SYNTAX                 INTEGER
+    ACCESS                 read-write
+    STATUS                 current
+    DESCRIPTION            "Saves the Regulation Power Mask as permanent"
+    ::= { plBasicEntry 18 }
+
+
+    plBasicPowerMaskUpdate   OBJECT-TYPE
+    SYNTAX                 INTEGER
+    ACCESS                 read-write
+    STATUS                 current
+    DESCRIPTION            "Recalculate and apply new Power Mask"
+    ::= { plBasicEntry 19 }
+
+    plBasicSubMode   OBJECT-TYPE
+    SYNTAX                 INTEGER
+    ACCESS                 read-write
+    STATUS                 current
+    DESCRIPTION            "Set/Get Submode"
+    ::= { plBasicEntry 20 }
+
+plBasicRegPowerMaskTable    OBJECT-TYPE
+    SYNTAX      SEQUENCE OF PlBasicRegPowerMaskEntry
+    ACCESS      not-accessible
+    STATUS      current
+    DESCRIPTION "Definition of the Regulation Power Mask"
+    ::= { plWiscBasic 2 }
+
+    plBasicRegPowerMaskEntry    OBJECT-TYPE
+        SYNTAX      PlBasicRegPowerMaskEntry
+        ACCESS      not-accessible
+        STATUS      current
+        DESCRIPTION "Definition of each notch in the Regulation Power Mask"
+        INDEX       { plBasicRPMCard, plBasicRPMIndex }
+        ::= { plBasicRegPowerMaskTable 1 }
+
+    PlBasicRegPowerMaskEntry ::= SEQUENCE {  plBasicRPMCard       INTEGER,
+    				                                 plBasicRPMIndex      INTEGER,
+                                             plBasicRPMStartFreq  INTEGER,
+                                             plBasicRPMStopFreq   INTEGER,
+                                             plBasicRPMDeep       INTEGER
+                                          }
+
+    plBasicRPMCard           OBJECT-TYPE
+    SYNTAX                   INTEGER
+    ACCESS                   read-only
+    STATUS                   current
+    DESCRIPTION              "Node card number"
+    ::= { plBasicRegPowerMaskEntry 1 }
+
+    plBasicRPMIndex          OBJECT-TYPE
+    SYNTAX                   INTEGER
+    ACCESS                   read-write
+    STATUS                   current
+    DESCRIPTION              "Index of the notch in the Regulation Power Mask"
+    ::= { plBasicRegPowerMaskEntry 2 }
+    
+    plBasicRPMStartFreq      OBJECT-TYPE
+    SYNTAX                   INTEGER
+    ACCESS                   read-write
+    STATUS                   current
+    DESCRIPTION              "Initial frequency of the notch in KHz"
+    ::= { plBasicRegPowerMaskEntry 3 }
+    
+    plBasicRPMStopFreq       OBJECT-TYPE
+    SYNTAX                   INTEGER
+    ACCESS                   read-write
+    STATUS                   current
+    DESCRIPTION              "Final frequency of the notch in KHz"
+    ::= { plBasicRegPowerMaskEntry 4 }
+    
+    plBasicRPMDeep           OBJECT-TYPE
+    SYNTAX                   INTEGER
+    ACCESS                   read-write
+    STATUS                   current
+    DESCRIPTION              "Deep of the notch in (0.5 x dB)"
+    ::= { plBasicRegPowerMaskEntry 5 }
+
+--
+-- The plWiscPhy Group
+--
+
+
+-- plPhyByMAC Table
+
+plPhyByMACTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF PlPhyByMACEntry
+    ACCESS      not-accessible
+    STATUS      current
+    DESCRIPTION "Physical parameters"
+    ::= { plWiscPhy 1 }
+
+    plPhyByMACEntry OBJECT-TYPE
+        SYNTAX      PlPhyByMACEntry
+        ACCESS      not-accessible
+        STATUS      current
+        DESCRIPTION ""
+        INDEX       { plPhyByMACCard,  plPhyByMACMAC }
+        ::= { plPhyByMACTable 1 }
+
+    PlPhyByMACEntry ::= SEQUENCE {   plPhyByMACCard                INTEGER,
+				     plPhyByMACMAC        	   PhysAddress,
+    				     plPhyByMACTXBPC        	   OCTET STRING ( SIZE ( 769 ) ),
+				     plPhyByMACTXBPCAggregated     INTEGER,
+				     plPhyByMACRXBPC        	   OCTET STRING ( SIZE ( 769 ) ),
+				     plPhyByMACRXBPCAggregated     INTEGER,
+				     plPhyByMACRXSNR		   OCTET STRING ( SIZE ( 769 ) ),
+				     plPhyByMACRXCFR		   OCTET STRING ( SIZE ( 769 ) ),
+				     plPhyByMACTXPhySpeed          INTEGER,
+				     plPhyByMACRXPhySpeed          INTEGER,
+				     plPhyByMACACK		   INTEGER,
+				     plPhyByMACCipher		   INTEGER,
+				     plPhyByMACTXHURTO		   INTEGER,
+				     plPhyByMACRXHURTO		   INTEGER,
+				     plPhyByMACIsAlive		   INTEGER,
+				     plPhyByMACRXTimeLastActivity  INTEGER
+				 }
+    
+    plPhyByMACCard  OBJECT-TYPE
+    SYNTAX          INTEGER
+    ACCESS          read-only
+    STATUS          current
+    DESCRIPTION     "Node card number"
+    ::= { plPhyByMACEntry 1 }
+    
+    plPhyByMACMAC             OBJECT-TYPE
+    SYNTAX                    PhysAddress
+    ACCESS                    read-only
+    STATUS                    current
+    DESCRIPTION               "MAC Address"
+    ::= { plPhyByMACEntry 2 }
+    
+    plPhyByMACTXBPC         OBJECT-TYPE
+    SYNTAX                    OCTET STRING ( SIZE ( 769 ) )
+    ACCESS                    read-only
+    STATUS                    current
+    DESCRIPTION               "BPC in transmission"
+    ::= { plPhyByMACEntry 3 }
+        
+    plPhyByMACTXBPCAggregated OBJECT-TYPE
+    SYNTAX                    INTEGER
+    ACCESS                    read-only
+    STATUS                    current
+    DESCRIPTION               "BPC Aggregated in transmission"
+    ::= { plPhyByMACEntry 5 }
+
+    plPhyByMACRXBPC         OBJECT-TYPE
+    SYNTAX                    OCTET STRING ( SIZE ( 769 ) )
+    ACCESS                    read-only
+    STATUS                    current
+    DESCRIPTION               "BPC in reception"
+    ::= { plPhyByMACEntry 6 }
+    
+    plPhyByMACRXBPCAggregated OBJECT-TYPE
+    SYNTAX                    INTEGER
+    ACCESS                    read-only
+    STATUS                    current
+    DESCRIPTION               "BPC Aggregated in reception"
+    ::= { plPhyByMACEntry 8 }
+    
+    plPhyByMACRXSNR           OBJECT-TYPE
+    SYNTAX                    OCTET STRING ( SIZE ( 769 ) )
+    ACCESS                    read-only
+    STATUS                    current
+    DESCRIPTION               "Measured SNR"
+    ::= { plPhyByMACEntry 9 }
+
+    plPhyByMACRXCFR           OBJECT-TYPE
+    SYNTAX                    OCTET STRING ( SIZE ( 769 ) )
+    ACCESS                    read-only
+    STATUS                    current
+    DESCRIPTION               "Measured CFR"
+    ::= { plPhyByMACEntry 10 }
+
+    plPhyByMACTXPhySpeed      OBJECT-TYPE
+    SYNTAX                    INTEGER
+    ACCESS                    read-only
+    STATUS                    current
+    DESCRIPTION               "Physical speed in transmission"
+    ::= { plPhyByMACEntry 11 }
+    
+    plPhyByMACRXPhySpeed      OBJECT-TYPE
+    SYNTAX                    INTEGER
+    ACCESS                    read-only
+    STATUS                    current
+    DESCRIPTION               "Physical speed in reception"
+    ::= { plPhyByMACEntry 12 }
+    
+    plPhyByMACACK             OBJECT-TYPE
+    SYNTAX                    INTEGER
+    ACCESS                    read-write
+    STATUS                    current
+    DESCRIPTION               "ACK enabled"
+    ::= { plPhyByMACEntry 13 }
+
+    plPhyByMACCipher          OBJECT-TYPE
+    SYNTAX                    INTEGER
+    ACCESS                    read-write
+    STATUS                    current
+    DESCRIPTION               "Cipher enabled"
+    ::= { plPhyByMACEntry 14 }
+
+    plPhyByMACTXHURTO         OBJECT-TYPE
+    SYNTAX                    INTEGER
+    ACCESS                    read-only
+    STATUS                    current
+    DESCRIPTION               "HURTO mode in transmission"
+    ::= { plPhyByMACEntry 15 }
+
+    plPhyByMACRXHURTO         OBJECT-TYPE
+    SYNTAX                    INTEGER
+    ACCESS                    read-only
+    STATUS                    current
+    DESCRIPTION               "HURTO mode in reception"
+    ::= { plPhyByMACEntry 16 }
+
+    plPhyByMACIsAlive         OBJECT-TYPE
+    SYNTAX                    INTEGER
+    ACCESS                    read-only
+    STATUS                    current
+    DESCRIPTION               "Checks if the node is alive or not"
+    ::= { plPhyByMACEntry 17 }
+
+    plPhyByMACRXTimeLastActivity  OBJECT-TYPE
+    SYNTAX                        INTEGER
+    ACCESS                        read-only
+    STATUS                        current
+    DESCRIPTION                   "Time since last PLC activity"
+    ::= { plPhyByMACEntry 18 }
+
+
+
+-- plPhyRXSNRThreshold Table
+
+plPhyRXSNRThresholdTable   OBJECT-TYPE
+    SYNTAX                 SEQUENCE OF PlPhyRXSNRThresholdEntry
+    ACCESS                 not-accessible
+    STATUS                 current
+    DESCRIPTION            ""
+    ::= { plWiscPhy 2 }
+
+    plPhyRXSNRThresholdEntry   OBJECT-TYPE
+        SYNTAX                 PlPhyRXSNRThresholdEntry
+        ACCESS                 not-accessible
+        STATUS                 current
+        DESCRIPTION            ""
+        INDEX                  { plPhyRXSNRThresholdCard, plPhyRXSNRThresholdIndex }
+        ::= { plPhyRXSNRThresholdTable 1 }
+
+    PlPhyRXSNRThresholdEntry ::= SEQUENCE {   plPhyRXSNRThresholdCard   INTEGER,
+					      plPhyRXSNRThresholdIndex  INTEGER,
+    				              plPhyRXSNRThreshold       INTEGER
+                                          }
+   
+    plPhyRXSNRThresholdCard  OBJECT-TYPE
+    SYNTAX                   INTEGER
+    ACCESS                   not-accessible
+    STATUS                   current
+    DESCRIPTION              "Node card number"
+    ::= { plPhyRXSNRThresholdEntry 1 }
+    
+    plPhyRXSNRThresholdIndex  OBJECT-TYPE
+    SYNTAX                    INTEGER
+    ACCESS                    not-accessible
+    STATUS                    current
+    DESCRIPTION              "SNR threshold value index (1..10)"
+    ::= { plPhyRXSNRThresholdEntry 2 }
+
+    plPhyRXSNRThreshold      OBJECT-TYPE
+    SYNTAX                   INTEGER
+    ACCESS                   read-write
+    STATUS                   current
+    DESCRIPTION              "SNR threshold value"
+    ::= { plPhyRXSNRThresholdEntry 3 }
+
+
+
+--
+-- The plWiscMAC Group
+--
+
+
+-- plMAC Table
+
+plMACTable      OBJECT-TYPE
+    SYNTAX      SEQUENCE OF PlMACEntry
+    ACCESS      not-accessible
+    STATUS      current
+    DESCRIPTION ""
+    ::= { plWiscMAC 1 }
+
+    plMACEntry      OBJECT-TYPE
+        SYNTAX      PlMACEntry
+        ACCESS      not-accessible
+        STATUS      current
+        DESCRIPTION ""
+        INDEX       { plMACCard }
+        ::= { plMACTable 1 }
+
+    PlMACEntry ::= SEQUENCE {   plMACCard               INTEGER,
+                                plMACAccessProtocol     INTEGER,
+                                plMACNumConnectedNodes  INTEGER,
+                                plMACNumSlaves          INTEGER
+			    }
+    
+    plMACCard    OBJECT-TYPE
+    SYNTAX       INTEGER
+    ACCESS       read-only
+    STATUS       current
+    DESCRIPTION  "Node card number"
+    ::= { plMACEntry 1 }
+    
+    plMACAccessProtocol     OBJECT-TYPE
+    SYNTAX                  INTEGER
+    ACCESS                  read-write
+    STATUS	    	    current
+    DESCRIPTION             "Autodiscovery mode enabled"
+    ::= { plMACEntry 2 }
+
+    plMACNumConnectedNodes  OBJECT-TYPE
+    SYNTAX                  INTEGER
+    ACCESS                  read-only
+    STATUS	    	    current
+    DESCRIPTION             "Number of nodes with link solved (PSP)"
+    ::= { plMACEntry 3 }
+
+    plMACNumSlaves          OBJECT-TYPE
+    SYNTAX                  INTEGER
+    ACCESS                  read-only
+    STATUS	    	    current
+    DESCRIPTION             "Number of slaves configured in the master or repeater"
+    ::= { plMACEntry 4 }
+
+
+
+-- plMACConnectedNodes Table
+
+plMACConnectedNodesTable    OBJECT-TYPE
+    SYNTAX                  SEQUENCE OF PlMACConnectedNodesEntry
+    ACCESS                  not-accessible
+    STATUS                  current
+    DESCRIPTION             ""
+    ::= { plWiscMAC 2 }
+
+    plMACConnectedNodesEntry   OBJECT-TYPE
+        SYNTAX                 PlMACConnectedNodesEntry
+        ACCESS                 not-accessible
+        STATUS                 current
+        DESCRIPTION            ""
+        INDEX                  { plMACConnectedNodesCard, plMACConnectedNodesIndex }
+        ::= { plMACConnectedNodesTable 1 }
+
+    PlMACConnectedNodesEntry ::= SEQUENCE {   plMACConnectedNodesCard   INTEGER,
+                                              plMACConnectedNodesIndex  INTEGER,
+                                              plMACConnectedNodesMAC    PhysAddress
+			                  }
+    
+    plMACConnectedNodesCard  OBJECT-TYPE
+    SYNTAX                   INTEGER
+    ACCESS                   read-only
+    STATUS                   current
+    DESCRIPTION              "Node card number"
+    ::= { plMACConnectedNodesEntry 1 }
+    
+    plMACConnectedNodesIndex  OBJECT-TYPE
+    SYNTAX                    INTEGER
+    ACCESS                    read-only
+    STATUS	    	      current
+    DESCRIPTION               "Node index"
+    ::= {plMACConnectedNodesEntry 2}
+
+    plMACConnectedNodesMAC    OBJECT-TYPE
+    SYNTAX                    PhysAddress
+    ACCESS                    read-only
+    STATUS	    	      current
+    DESCRIPTION               "MAC for the node index"
+    ::= {plMACConnectedNodesEntry 3}
+
+
+
+-- plMACSlaves Table
+
+plMACSlavesTable    OBJECT-TYPE
+    SYNTAX          SEQUENCE OF PlMACSlavesEntry
+    ACCESS          not-accessible
+    STATUS          current
+    DESCRIPTION     ""
+    ::= { plWiscMAC 3 }
+
+    plMACSlavesEntry   OBJECT-TYPE
+        SYNTAX         PlMACSlavesEntry
+        ACCESS         not-accessible
+        STATUS         current
+        DESCRIPTION    ""
+        INDEX          { plMACSlavesCard, plMACSlavesIndex }
+        ::= { plMACSlavesTable 1 }
+
+    PlMACSlavesEntry ::= SEQUENCE {   plMACSlavesCard   INTEGER,
+    	                              plMACSlavesIndex  INTEGER,
+                                      plMACSlavesMAC    PhysAddress
+			          }
+    
+    plMACSlavesCard  OBJECT-TYPE
+    SYNTAX           INTEGER
+    ACCESS           read-only
+    STATUS           current
+    DESCRIPTION      "Node card number"
+    ::= { plMACSlavesEntry 1 }
+    
+    plMACSlavesIndex  OBJECT-TYPE
+    SYNTAX            INTEGER
+    ACCESS            read-only
+    STATUS  	      current
+    DESCRIPTION       "Slaves index"
+    ::= { plMACSlavesEntry 2 } 
+
+    plMACSlavesMAC    OBJECT-TYPE
+    SYNTAX            PhysAddress
+    ACCESS            read-only
+    STATUS	      current
+    DESCRIPTION       "MAC for the slave index"
+    ::= { plMACSlavesEntry 3 }
+    
+
+--
+-- The plWiscQoS Group
+--
+
+
+plQoSMasterGeneralMinOneWayLat  OBJECT-TYPE
+SYNTAX           INTEGER
+ACCESS           read-only
+STATUS           current
+DESCRIPTION      "Latency in milliseconds"
+::= { plWiscQoS 1 }
+
+plQoSMasterGeneralBwMngrPolicy  OBJECT-TYPE
+SYNTAX           INTEGER
+ACCESS           read-only
+STATUS           current
+DESCRIPTION      "Bandwidth Management Policy"
+::= { plWiscQoS 2 }
+
+
+
+-- plQoSPriorityManagement Table
+
+
+plQoSPriorityManagementTable   OBJECT-TYPE
+    SYNTAX      SEQUENCE OF PlQoSPriorityManagementEntry
+    ACCESS      not-accessible
+    STATUS      current
+    DESCRIPTION ""
+    ::= { plWiscQoS 3 }
+
+    plQoSPriorityManagementEntry   OBJECT-TYPE
+        SYNTAX      PlQoSPriorityManagementEntry
+        ACCESS      not-accessible
+        STATUS      current
+        DESCRIPTION "QoS Priorities Management per card."
+        INDEX       { plQoSPriorityManagementCard, plQoSPriorityManagementPrio }
+        ::= { plQoSPriorityManagementTable 1 }
+    
+    PlQoSPriorityManagementEntry ::= SEQUENCE {   plQoSPriorityManagementCard      INTEGER,
+    	                                          plQoSPriorityManagementPrio      INTEGER,
+                                                  plQoSPriorityManagementLatency   INTEGER,
+						  plQoSPriorityManagementJitter    INTEGER,
+						  plQoSPriorityManagementBandwidth INTEGER
+			                      }
+
+    plQoSPriorityManagementCard  OBJECT-TYPE
+    SYNTAX           INTEGER
+    ACCESS           read-only
+    STATUS           current
+    DESCRIPTION      "Node card number"
+    ::= { plQoSPriorityManagementEntry 1 }
+
+    plQoSPriorityManagementPrio  OBJECT-TYPE
+    SYNTAX           INTEGER
+    ACCESS           read-only
+    STATUS           current
+    DESCRIPTION      "Priority value (1..8)"
+    ::= { plQoSPriorityManagementEntry 2 }
+
+    plQoSPriorityManagementLatency  OBJECT-TYPE
+    SYNTAX           INTEGER
+    ACCESS           read-only
+    STATUS           current
+    DESCRIPTION      "Latency value for the priority (0,1,2,4,8)"
+    ::= { plQoSPriorityManagementEntry 3 }
+
+    plQoSPriorityManagementJitter  OBJECT-TYPE
+    SYNTAX           INTEGER
+    ACCESS           read-only
+    STATUS           current
+    DESCRIPTION      "Jitter value for the priority"
+    ::= { plQoSPriorityManagementEntry 4 }
+
+    plQoSPriorityManagementBandwidth  OBJECT-TYPE
+    SYNTAX           INTEGER
+    ACCESS           read-only
+    STATUS           current
+    DESCRIPTION      "Bandwidth for the priority"
+    ::= { plQoSPriorityManagementEntry 5 }
+
+
+
+-- plQoSPerUser Table
+
+plQoSPerUserTable   OBJECT-TYPE
+    SYNTAX      SEQUENCE OF PlQoSPerUserEntry
+    ACCESS      not-accessible
+    STATUS      current
+    DESCRIPTION ""
+    ::= { plWiscQoS 4 }
+
+    plQoSPerUserEntry   OBJECT-TYPE
+        SYNTAX      PlQoSPerUserEntry
+        ACCESS      not-accessible
+        STATUS      current
+        DESCRIPTION "User QoS management values per card."
+        INDEX       { plQoSPerUserCard, plQoSPerUserMAC }
+        ::= { plQoSPerUserTable 1 }
+    
+    PlQoSPerUserEntry ::= SEQUENCE {   plQoSPerUserCard                 INTEGER,
+    	                               plQoSPerUserMAC                  PhysAddress,
+                                       plQoSPerUserTXMaxXput            INTEGER,
+				       plQoSPerUserRXMaxXput            INTEGER,
+				       plQoSPerUserPriorityAllowedUp    OCTET STRING ( SIZE ( 2 ) ),
+				       plQoSPerUserPriorityAllowedDown  OCTET STRING ( SIZE ( 2 ) )
+			            }
+
+    plQoSPerUserCard   OBJECT-TYPE
+    SYNTAX           INTEGER
+    ACCESS           read-only
+    STATUS           current
+    DESCRIPTION      "Node card number"
+    ::= { plQoSPerUserEntry 1 }
+
+    plQoSPerUserMAC   OBJECT-TYPE
+    SYNTAX           PhysAddress
+    ACCESS           read-only
+    STATUS           current
+    DESCRIPTION      "User MAC address"
+    ::= { plQoSPerUserEntry 2 }
+
+    plQoSPerUserTXMaxXput   OBJECT-TYPE
+    SYNTAX           INTEGER
+    ACCESS           read-only
+    STATUS           current
+    DESCRIPTION      "Maximum allowed throughput in transmission for a user"
+    ::= { plQoSPerUserEntry 3 }
+
+    plQoSPerUserRXMaxXput   OBJECT-TYPE
+    SYNTAX           INTEGER
+    ACCESS           read-only
+    STATUS           current
+    DESCRIPTION      "Maximum allowed throughput in reception for a user"
+    ::= { plQoSPerUserEntry 4 }
+
+    plQoSPerUserPriorityAllowedUp   OBJECT-TYPE
+    SYNTAX           OCTET STRING ( SIZE ( 2 ) )
+    ACCESS           read-only
+    STATUS           current
+    DESCRIPTION      "Allowed priorities for transmission and reception in upstream for a user"
+    ::= { plQoSPerUserEntry 5 }
+
+    plQoSPerUserPriorityAllowedDown   OBJECT-TYPE
+    SYNTAX           OCTET STRING ( SIZE ( 2 ) )
+    ACCESS           read-only
+    STATUS           current
+    DESCRIPTION      "Allowed priorities for transmission and reception in downstream for a user"
+    ::= { plQoSPerUserEntry 6 }
+
+
+
+--
+-- The plWiscStatistics Group
+--
+
+
+-- plStatistics Table
+
+plStatisticsTable   OBJECT-TYPE
+    SYNTAX      SEQUENCE OF PlStatisticsEntry
+    ACCESS      not-accessible
+    STATUS      current
+    DESCRIPTION "Packets and Bytes Statistics by Interface"
+    ::= { plWiscStatistics 1 }
+
+    plStatisticsEntry   OBJECT-TYPE
+        SYNTAX      PlStatisticsEntry
+        ACCESS      not-accessible
+        STATUS      current
+        DESCRIPTION ""
+        INDEX       { plStatisticsCard }
+        ::= { plStatisticsTable 1 }
+    
+    PlStatisticsEntry ::= SEQUENCE {   plStatisticsCard                         INTEGER,
+                                       plStatisticsPreprocessorDroppedPkts      Counter,
+                                       plStatisticsPortFinderDroppedPkts        Counter,
+                                       plStatisticsReplicantDroppedPkts         Counter,
+                                       plStatisticsExtAInputBytes               Counter,
+                                       plStatisticsExtAInputPkts                Counter,
+                                       plStatisticsExtAInputBadCRC              Counter,
+                                       plStatisticsExtAInputDiscardedPkts       Counter,
+                                       plStatisticsExtAOutputBytes              Counter,
+                                       plStatisticsExtAOutputPkts               Counter,
+                                       plStatisticsExtAOutputCollisions         Counter,
+                                       plStatisticsExtBInputBytes               Counter,
+                                       plStatisticsExtBInputPkts                Counter,
+                                       plStatisticsExtBInputBadCRC              Counter,
+                                       plStatisticsExtBInputDiscardedPkts       Counter,
+                                       plStatisticsExtBOutputBytes              Counter,
+                                       plStatisticsExtBOutputPkts               Counter,
+                                       plStatisticsExtBOutputCollisions         Counter,
+				       plStatisticsPLCInputWords                Counter,
+				       plStatisticsPLCInputPackets              Counter,
+				       plStatisticsPLCInputIncorrigible         Counter,
+				       plStatisticsPLCInputFECBlocksTotal       Counter,
+				       plStatisticsPLCInputFECBlocksCorrected   Counter,
+				       plStatisticsPLCInputPktsReceived         Counter,
+				       plStatisticsPLCInputPktsRcvComplete      Counter,
+				       plStatisticsPLCInputPktsRcvIncomplete    Counter,
+				       plStatisticsPLCOutputWords               Counter,
+				       plStatisticsPLCOutputPkts                Counter
+			            }
+
+    plStatisticsCard  OBJECT-TYPE
+    SYNTAX           INTEGER
+    ACCESS           read-only
+    STATUS           current
+    DESCRIPTION      "Node card number"
+    ::= { plStatisticsEntry 1 }
+
+    plStatisticsPreprocessorDroppedPkts  OBJECT-TYPE
+    SYNTAX           Counter
+    ACCESS           read-only
+    STATUS           current
+    DESCRIPTION      "Packets dropped by the Preprocessor"
+    ::= { plStatisticsEntry 2 }
+
+    plStatisticsPortFinderDroppedPkts  OBJECT-TYPE
+    SYNTAX           Counter
+    ACCESS           read-only
+    STATUS           current
+    DESCRIPTION      "Packets dropped by the PortFinder"
+    ::= { plStatisticsEntry 3 }
+
+    plStatisticsReplicantDroppedPkts  OBJECT-TYPE
+    SYNTAX           Counter
+    ACCESS           read-only
+    STATUS           current
+    DESCRIPTION      "Packets dropped by the Replicant"
+    ::= { plStatisticsEntry 4 }
+    
+    plStatisticsExtAInputBytes  OBJECT-TYPE
+    SYNTAX           Counter
+    ACCESS           read-only
+    STATUS           current
+    DESCRIPTION      "Bytes received by EXTA"
+    ::= { plStatisticsEntry 5 }
+
+    plStatisticsExtAInputPkts  OBJECT-TYPE
+    SYNTAX           Counter
+    ACCESS           read-only
+    STATUS           current
+    DESCRIPTION      "Packets received by EXTA"
+    ::= { plStatisticsEntry 6 }
+
+    plStatisticsExtAInputBadCRC  OBJECT-TYPE
+    SYNTAX           Counter
+    ACCESS           read-only
+    STATUS           current
+    DESCRIPTION      "Packets received with bad CRC by EXTA"
+    ::= { plStatisticsEntry 7 }
+
+    plStatisticsExtAInputDiscardedPkts  OBJECT-TYPE
+    SYNTAX           Counter
+    ACCESS           read-only
+    STATUS           current
+    DESCRIPTION      "Packets received but discarded by EXTA"
+    ::= { plStatisticsEntry 8 }
+
+    plStatisticsExtAOutputBytes  OBJECT-TYPE
+    SYNTAX           Counter
+    ACCESS           read-only
+    STATUS           current
+    DESCRIPTION      "Bytes transmitted by EXTA"
+    ::= { plStatisticsEntry 9 }
+
+    plStatisticsExtAOutputPkts  OBJECT-TYPE
+    SYNTAX           Counter
+    ACCESS           read-only
+    STATUS           current
+    DESCRIPTION      "Packets transmitted by EXTA"
+    ::= { plStatisticsEntry 10 }
+
+    plStatisticsExtAOutputCollisions  OBJECT-TYPE
+    SYNTAX           Counter
+    ACCESS           read-only
+    STATUS           current
+    DESCRIPTION      "Collisions in transmission by EXTA"
+    ::= { plStatisticsEntry 11 }
+
+    plStatisticsExtBInputBytes  OBJECT-TYPE
+    SYNTAX           Counter
+    ACCESS           read-only
+    STATUS           current
+    DESCRIPTION      "Bytes received by EXTB"
+    ::= { plStatisticsEntry 12 }
+
+    plStatisticsExtBInputPkts  OBJECT-TYPE
+    SYNTAX           Counter
+    ACCESS           read-only
+    STATUS           current
+    DESCRIPTION      "Packets received by EXTB"
+    ::= { plStatisticsEntry 13 }
+
+    plStatisticsExtBInputBadCRC  OBJECT-TYPE
+    SYNTAX           Counter
+    ACCESS           read-only
+    STATUS           current
+    DESCRIPTION      "Packets received with bad CRC by EXTB"
+    ::= { plStatisticsEntry 14 }
+
+    plStatisticsExtBInputDiscardedPkts  OBJECT-TYPE
+    SYNTAX           Counter
+    ACCESS           read-only
+    STATUS           current
+    DESCRIPTION      "Packets received but discarded by EXTB"
+    ::= { plStatisticsEntry 15 }
+
+    plStatisticsExtBOutputBytes  OBJECT-TYPE
+    SYNTAX           Counter
+    ACCESS           read-only
+    STATUS           current
+    DESCRIPTION      "Bytes transmitted by EXTB"
+    ::= { plStatisticsEntry 16 }
+
+    plStatisticsExtBOutputPkts  OBJECT-TYPE
+    SYNTAX           Counter
+    ACCESS           read-only
+    STATUS           current
+    DESCRIPTION      "Packets transmitted by EXTB"
+    ::= { plStatisticsEntry 17 }
+
+    plStatisticsExtBOutputCollisions  OBJECT-TYPE
+    SYNTAX           Counter
+    ACCESS           read-only
+    STATUS           current
+    DESCRIPTION      "Collisions in transmission by EXTB"
+    ::= { plStatisticsEntry 18 }
+
+    plStatisticsPLCInputWords  OBJECT-TYPE
+    SYNTAX           Counter
+    ACCESS           read-only
+    STATUS           current
+    DESCRIPTION      "Words received by PLC"
+    ::= { plStatisticsEntry 19 }
+
+    plStatisticsPLCInputPackets   OBJECT-TYPE
+    SYNTAX   Counter
+    ACCESS   read-only
+    STATUS   current
+    DESCRIPTION   "Packets received by PLC"
+    ::= { plStatisticsEntry 20}
+
+
+    plStatisticsPLCInputIncorrigible  OBJECT-TYPE
+    SYNTAX           Counter
+    ACCESS           read-only
+    STATUS           current
+    DESCRIPTION      "Incorrigible packets received by PLC"
+    ::= { plStatisticsEntry 21 }
+
+    plStatisticsPLCInputFECBlocksTotal    OBJECT-TYPE
+    SYNTAX           Counter
+    ACCESS           read-only
+    STATUS           current
+    DESCRIPTION      "Received FEC blocks by PLC"
+    ::= { plStatisticsEntry 22 }
+    
+    plStatisticsPLCInputFECBlocksCorrected	OBJECT-TYPE
+    SYNTAX           Counter
+    ACCESS           read-only
+    STATUS           current
+    DESCRIPTION      "FEC blocks corrected by PLC"
+    ::= { plStatisticsEntry 23 }
+    
+    plStatisticsPLCInputPktsReceived		OBJECT-TYPE
+    SYNTAX           Counter
+    ACCESS           read-only
+    STATUS           current
+    DESCRIPTION      "Received packets by PLC"
+    ::= { plStatisticsEntry 24 }
+    
+    plStatisticsPLCInputPktsRcvComplete   OBJECT-TYPE
+    SYNTAX           Counter
+    ACCESS           read-only
+    STATUS           current
+    DESCRIPTION      "Complete received packets by PLC"
+    ::= { plStatisticsEntry 25 }
+    
+    plStatisticsPLCInputPktsRcvIncomplete  OBJECT-TYPE
+    SYNTAX           Counter
+    ACCESS           read-only
+    STATUS           current
+    DESCRIPTION      "Incomplete received packets by PLC"
+    ::= { plStatisticsEntry 26 }
+    
+    plStatisticsPLCOutputWords  OBJECT-TYPE
+    SYNTAX           Counter
+    ACCESS           read-only
+    STATUS           current
+    DESCRIPTION      "Transmitted words by PLC"
+    ::= { plStatisticsEntry 27 }
+
+    plStatisticsPLCOutputPkts  OBJECT-TYPE
+    SYNTAX           Counter
+    ACCESS           read-only
+    STATUS           current
+    DESCRIPTION      "Transmitted packets by PLC"
+    ::= { plStatisticsEntry 28 }
+
+-- End of plStatistics Table
+
+
+
+--
+-- The plWiscTraps Group
+--
+
+
+-- plTrapsPhy Table
+
+plTrapsPhyTable    OBJECT-TYPE
+    SYNTAX      SEQUENCE OF PlTrapsPhyEntry
+    ACCESS      not-accessible
+    STATUS      current
+    DESCRIPTION ""
+    ::= { plWiscTraps 1 }
+
+    plTrapsPhyEntry    OBJECT-TYPE
+        SYNTAX      PlTrapsPhyEntry
+        ACCESS      not-accessible
+        STATUS      current
+        DESCRIPTION ""
+        INDEX       { plTrapsPhyCard }
+        ::= { plTrapsPhyTable 1 }
+    
+    PlTrapsPhyEntry ::= SEQUENCE {   plTrapsPhyCard                  INTEGER,
+                                     plTrapsPhyTrapToHURTOEnable     INTEGER,
+                                     plTrapsPhyTrapFromHURTOEnable   INTEGER
+                                 }     
+				      
+				      
+    plTrapsPhyCard   OBJECT-TYPE
+    SYNTAX           INTEGER
+    ACCESS           read-only
+    STATUS           current
+    DESCRIPTION      "node card number"
+    ::= { plTrapsPhyEntry 1 }
+				      
+    plTrapsPhyTrapToHURTOEnable  OBJECT-TYPE
+    SYNTAX           INTEGER
+    ACCESS           read-write
+    STATUS           current
+    DESCRIPTION      "Enable/disable trap generation when entering HURTO mode"
+    ::= { plTrapsPhyEntry 2 }
+				      
+    plTrapsPhyTrapFromHURTOEnable  OBJECT-TYPE
+    SYNTAX           INTEGER
+    ACCESS           read-write
+    STATUS           current
+    DESCRIPTION      "Enable/disable trap generation when exiting HURTO mode"
+    ::= { plTrapsPhyEntry 3 }
+				      
+
+-- plTrapsMAC Table
+
+plTrapsMACTable    OBJECT-TYPE
+    SYNTAX      SEQUENCE OF PlTrapsMACEntry
+    ACCESS      not-accessible
+    STATUS      current
+    DESCRIPTION ""
+    ::= { plWiscTraps 2 }
+
+    plTrapsMACEntry    OBJECT-TYPE
+        SYNTAX      PlTrapsMACEntry
+        ACCESS      not-accessible
+        STATUS      current
+        DESCRIPTION ""
+        INDEX       { plTrapsMACCard }
+        ::= { plTrapsMACTable 1 }
+    
+    PlTrapsMACEntry ::= SEQUENCE {   plTrapsMACCard                        INTEGER,
+                                     plTrapsMACPeerDetectedEnable      INTEGER,
+                                     plTrapsMACPeerDisappearedEnable   INTEGER
+                                 }     
+				      
+				      
+    plTrapsMACCard   OBJECT-TYPE
+    SYNTAX           INTEGER
+    ACCESS           read-only
+    STATUS           current
+    DESCRIPTION      "Node card number"
+    ::= { plTrapsMACEntry 1 }
+				      
+    plTrapsMACPeerDetectedEnable   OBJECT-TYPE
+    SYNTAX           INTEGER
+    ACCESS           read-write
+    STATUS           current
+    DESCRIPTION      "Enable/disable trap generation when detecting a peer"
+    ::= { plTrapsMACEntry 2 }
+				      
+    plTrapsMACPeerDisappearedEnable   OBJECT-TYPE
+    SYNTAX           INTEGER
+    ACCESS           read-write
+    STATUS           current
+    DESCRIPTION      "Enable/disable trap generation when dissapearing a peer"
+    ::= { plTrapsMACEntry 3 }
+
+
+-- plTrapsBridge Table
+
+plTrapsBridgeTable    OBJECT-TYPE
+    SYNTAX      SEQUENCE OF PlTrapsBridgeEntry
+    ACCESS      not-accessible
+    STATUS      current
+    DESCRIPTION ""
+    ::= { plWiscTraps 3 }
+
+    plTrapsBridgeEntry    OBJECT-TYPE
+        SYNTAX      PlTrapsBridgeEntry
+        ACCESS      not-accessible
+        STATUS      current
+        DESCRIPTION ""
+        INDEX       { plTrapsBridgeCard }
+        ::= { plTrapsBridgeTable 1 }
+    
+    PlTrapsBridgeEntry ::= SEQUENCE {   plTrapsBridgeCard                  INTEGER,
+                                        plTrapsBridgeNewRootEnable         INTEGER,
+                                        plTrapsBridgeTopologyChangeEnable  INTEGER
+                                 }     
+				      
+				      
+    plTrapsBridgeCard   OBJECT-TYPE
+    SYNTAX           INTEGER
+    ACCESS           read-only
+    STATUS           current
+    DESCRIPTION      "Node card number"
+    ::= { plTrapsBridgeEntry 1 }
+				      
+    plTrapsBridgeNewRootEnable   OBJECT-TYPE
+    SYNTAX           INTEGER
+    ACCESS           read-write
+    STATUS           current
+    DESCRIPTION      "Enable/disable trap generation when a new root is assigned"
+    ::= { plTrapsBridgeEntry 2 }
+				      
+    plTrapsBridgeTopologyChangeEnable   OBJECT-TYPE
+    SYNTAX           INTEGER
+    ACCESS           read-write
+    STATUS           current
+    DESCRIPTION      "Enable/disable trap generation when topology changes"
+    ::= { plTrapsBridgeEntry 3 }
+
+--
+-- The plWiscStp Group
+--
+
+
+plStpTable      OBJECT-TYPE
+    SYNTAX      SEQUENCE OF PlStpEntry
+    ACCESS      not-accessible
+    STATUS      current
+    DESCRIPTION "Information about Spanning Tree."
+    ::= { plWiscStp 1 }
+
+    plStpEntry      OBJECT-TYPE
+        SYNTAX      PlStpEntry
+        ACCESS      not-accessible
+        STATUS      current
+        DESCRIPTION "System information gathered per card."
+        INDEX       { plStpCard }
+        ::= { plStpTable 1 }
+
+    PlStpEntry ::= SEQUENCE {    plStpCard		INTEGER,
+                                 plStpEnable		INTEGER,
+                                 plStpProtocolVersion	OCTET STRING (SIZE(0..8)),
+                                 plStpPtpExtA           INTEGER,
+                                 plStpPtpExtB           INTEGER,
+                                 plStpFrontier  	OCTET STRING (SIZE(0..8))
+                               }
+
+    plStpCard        OBJECT-TYPE
+    SYNTAX           INTEGER
+    ACCESS           read-only
+    STATUS           current
+    DESCRIPTION      "Node card number"
+    ::= { plStpEntry 1 }
+    
+    plStpEnable          OBJECT-TYPE
+    SYNTAX               INTEGER
+    ACCESS               read-write
+    STATUS               current
+    DESCRIPTION          "0: STP Enabled, 1: STP Disabled"
+    ::= { plStpEntry 2 }
+    
+    plStpProtocolVersion    OBJECT-TYPE
+    SYNTAX                  OCTET STRING (SIZE(0..8))
+    ACCESS                  read-write
+    STATUS                  current
+    DESCRIPTION             "STP Protocol Version [STP|RSTP]"
+    ::= { plStpEntry 3 }
+
+    plStpPtpExtA         OBJECT-TYPE
+    SYNTAX               INTEGER
+    ACCESS               read-write
+    STATUS               current
+    DESCRIPTION          "Set point-to-point flag for EXTA [0|1]"
+    ::= { plStpEntry 4 }
+    
+    plStpPtpExtB         OBJECT-TYPE
+    SYNTAX               INTEGER
+    ACCESS               read-write
+    STATUS               current
+    DESCRIPTION          "Set point-to-point flag for EXTB [0|1]"
+    ::= { plStpEntry 5 }
+    
+    plStpFrontier        OBJECT-TYPE
+    SYNTAX               OCTET STRING (SIZE(0..8))
+    ACCESS               read-write
+    STATUS               current
+    DESCRIPTION          "STP Frontier enabled in [EXTA|EXTB|NONE]"
+    ::= { plStpEntry 6 }
+
+END
+ 

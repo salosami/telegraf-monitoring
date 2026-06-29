@@ -1,0 +1,240 @@
+--
+-- TELESTE-ETTH-IGMP-MIB.mib
+-- *****************************************************************************
+-- Copyright (c) 2006 by:
+-- 
+-- Teleste Corporation
+-- Seponkatu 1
+-- FIN-20660 Littoinen, Finland
+-- tel. +358 2 2605 611
+-- url: http://www.teleste.com
+-- 
+-- Description: Ethernet to home (EttH) igmp functionality private MIB.
+-- 
+-- 
+-- ****************************************************************************
+-- 
+    
+	TELESTE-ETTH-IGMP-MIB DEFINITIONS ::= BEGIN
+ 
+		IMPORTS
+			OBJECT-TYPE			
+				FROM RFC-1212			
+			DisplayString			
+				FROM RFC1213-MIB			
+			etthMIB		
+				FROM TELESTE-ETTH-MIB  
+			RowStatus
+			    FROM SNMPv2-TC  
+			etthClientIf  
+				FROM TELESTE-ETTH-CLIENT-IF-MIB
+			;  
+                  
+                  
+etthIgmpMIB MODULE-IDENTITY
+        LAST-UPDATED "200708270000Z" -- 
+        ORGANIZATION "Teleste Corporation"
+        CONTACT-INFO
+	        "Teleste Corporation
+             Seponkatu 1
+             FIN-20660 Littoinen, Finland
+             tel. +358 2 2605 611
+             url: http://www.teleste.com"
+		DESCRIPTION
+      		"Ethernet to home (EttH) igmp functionality private MIB." 
+      		
+      	REVISION        "200705160000Z"
+    	DESCRIPTION
+            "Initial Version of this MIB module."  
+        REVISION        "200708270000Z"
+    	DESCRIPTION
+            "Igmp snooping on/off setting added." 
+
+
+	::= { etthMIB 20 }   
+	
+ 
+etthIgmpObjects OBJECT IDENTIFIER ::= { etthIgmpMIB 1 } 
+   
+--
+-- etthIgmpSnooping
+--  
+  		etthIgmpSnooping OBJECT-TYPE
+			SYNTAX INTEGER
+			{
+			    off(0),
+			    on(1),
+			}						
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"Turns Igmp snooping on/off."
+			::= { etthIgmpObjects 1 }
+   
+    
+--
+-- etthIgmpFastLeave
+--  
+  		etthIgmpFastLeave OBJECT-TYPE
+			SYNTAX INTEGER
+			{
+			    off(1),
+			    on(2),
+			    ipBased(3)
+			}  			
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"IGMP fast leave setting modifies the multicast VLAN tag for IGMP snooping feature.
+				
+				Fast leave with ON with IP-Based status flag ON means tracking of leave sender IP 
+				address before removing GDA. One leave message doesn't drop stream if there are 
+				other IP addresses in the user port's IP source list."
+			::= { etthIgmpObjects 2 }
+
+  
+--
+-- etthIgmpJoinLimitTable
+--             
+    	etthIgmpJoinLimitTable OBJECT-TYPE
+			SYNTAX SEQUENCE OF EtthIgmpJoinLimitEntry
+			ACCESS not-accessible
+			STATUS mandatory
+			DESCRIPTION
+				"This table contains IGMP join limit entries for client interfaces."
+			::= { etthIgmpObjects 3 }
+
+
+		etthIgmpJoinLimitEntry OBJECT-TYPE
+			SYNTAX EtthIgmpJoinLimitEntry
+			ACCESS not-accessible
+			STATUS mandatory    
+			DESCRIPTION
+				"A single IGMP join limit entry for a client interface."
+			INDEX { etthClientIf }
+			::= { etthIgmpJoinLimitTable 1 }
+
+
+		EtthIgmpJoinLimitEntry ::=
+			SEQUENCE { 
+				etthIgmpJoinLimit
+					INTEGER
+				}
+             
+       	etthIgmpJoinLimit OBJECT-TYPE
+			SYNTAX INTEGER (-1..50)	
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"IGMP join limit for ethernet interface. The number of active IGMP GDAs
+				 in a single client port can be limited with IGMP Join limiting.
+				 Value -1 means join limit is off."
+
+			::= { etthIgmpJoinLimitEntry 1 }        
+  
+  
+--
+-- etthIgmpJoinFilterTable
+--             
+    	etthIgmpJoinFilterTable OBJECT-TYPE
+			SYNTAX SEQUENCE OF EtthIgmpJoinFilterEntry
+			ACCESS not-accessible
+			STATUS mandatory
+			DESCRIPTION
+				"This table contains IGMP join filter entries for client interfaces."
+			::= { etthIgmpObjects 4 }
+
+
+		etthIgmpJoinFilterEntry OBJECT-TYPE
+			SYNTAX EtthIgmpJoinFilterEntry
+			ACCESS not-accessible
+			STATUS mandatory    
+			DESCRIPTION
+				"A single IGMP join filter entry for a client interface."
+			INDEX { etthClientIf, etthIgmpJoinFilterIndex }
+			::= { etthIgmpJoinFilterTable 1 }
+
+
+		EtthIgmpJoinFilterEntry ::=
+			SEQUENCE { 
+				etthIgmpJoinFilterIndex
+					INTEGER,
+				etthIgmpJoinFilterMode
+					INTEGER,
+				etthIgmpJoinFilterAddress
+					IpAddress,
+				etthIgmpJoinFilterAddressMask
+					IpAddress,
+				etthIgmpJoinFilterRowStatus
+					RowStatus
+				}
+
+    	etthIgmpJoinFilterIndex OBJECT-TYPE
+			SYNTAX INTEGER	
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"The value of this object uniquely identifies this etthIgmpJoinFilter entry."
+
+			::= { etthIgmpJoinFilterEntry 1 } 
+       
+         etthIgmpJoinFilterMode OBJECT-TYPE
+			SYNTAX INTEGER
+			{
+				allow(1),
+				deny(2)			
+			}	
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"Specifies the mode of the filter.
+								
+				 Setting address and mask values to zero (0) and filter mode to 
+				 deny(2) blocks all joins from the interface - unless there are 
+				 allowing filters before all blocking item."     
+				
+			::= { etthIgmpJoinFilterEntry 2 }     
+             
+             
+        etthIgmpJoinFilterAddress OBJECT-TYPE
+			SYNTAX IpAddress
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"IP address of GDA (Group Destination Address) to permit or deny access."        
+				
+			::= { etthIgmpJoinFilterEntry 3 }
+			
+		etthIgmpJoinFilterAddressMask OBJECT-TYPE
+			SYNTAX IpAddress
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"Mask for filter address. For single address the mask is 0xffffffff."        
+				
+			::= { etthIgmpJoinFilterEntry 4 } 
+			
+		etthIgmpJoinFilterRowStatus OBJECT-TYPE
+			SYNTAX RowStatus
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"When an entry contains valid filter the status is 'active'. Empty
+				entry has value 'notInService'.
+				
+				How to add a new entry:
+				1) Select an empty row
+				2) Set mode, address and mask. When a new entry is beign edited it's status is 'notReady'.
+				3) Set status field to 'createAndGo'   
+				
+				New item is always placed at the bottom of the Join filter list and list 
+				is processed from the first to last and first matching item rule is executed.
+				
+				To remove an entry or cancel addition set status to 'destroy'."        
+				
+			::= { etthIgmpJoinFilterEntry 5 }
+			
+	
+END                            
+
+
