@@ -1,194 +1,185 @@
-# Telegraf DOCSIS Cable Modem Monitoring
+# Telegraf Monitoring Stack
 
-A Docker-based monitoring stack for DOCSIS cable modem health metrics using **Telegraf** and **InfluxDB v2**.
+Docker-pohjainen monitorointiprojekti, joka kerää mittareita Telegrafilla ja tallentaa ne InfluxDB v2 -tietokantaan.
 
-## Overview
+Projektissa on kolme pääkäyttötapausta:
 
-This project collects real-time RF signal quality, channel information, and traffic metrics from DOCSIS 3.0/3.1 cable modems via SNMP, storing them in InfluxDB v2 for visualization and analysis.
+- DOCSIS-kaapelimodeemien SNMP-mittaus
+- Teleste-laitteiden SNMP-mittaus
+- VDM REST API -mittaus HTTP-inputilla
 
-## Features
+## Mitä tämä projekti sisältää
 
-- **InfluxDB v2** — Time-series database with built-in UI
-- **Telegraf** — Data collection agent with SNMP input
-- **Docker Compose** — One-command setup
-- **DOCSIS Metrics**:
-  - IF-MIB interface traffic (octets, packets)
-  - DOCSIS 3.0 downstream RF power & SNR/MER
-  - DOCSIS 3.0 upstream channel tx power
-  - DOCSIS 3.1 OFDM/OFDMA channels with MER/power conversion
+- InfluxDB v2 (aikasarjatietokanta)
+- Telegraf (keruuagentti)
+- Docker Compose -käynnistys
+- Valmiit analyysiskriptit poikkeamien etsintään
+- Grafana-dashboardin import-esimerkki
 
-## Prerequisites
+## Esivaatimukset
 
-- Docker & Docker Compose
-- Network access to cable modem (SNMP v2c on port 161)
-- Environment variables set in `.env`
+- Docker
+- Docker Compose
+- Verkkoyhteys mitattaviin laitteisiin (SNMP/HTTP)
 
-## Quick Start
+## Pika-aloitus
 
-1. **Configure environment variables:**
-   ```bash
-   # Edit .env with your credentials
-   cp .env.example .env  # (if provided, else edit .env directly)
-   ```
-
-2. **Start the stack:**
-   ```bash
-   docker compose up -d
-   ```
-
-3. **Access InfluxDB UI:**
-   - URL: http://localhost:8086
-   - Login: username/password from `.env`
-   - Organization: `docsis` (default)
-   - Bucket: `docsis` (default)
-
-4. **Verify data collection:**
-   ```bash
-   docker logs -f telegraf
-   ```
-
-## Configuration
-
-### InfluxDB v2 Setup
-Configured automatically via Docker Compose using `DOCKER_INFLUXDB_INIT_*` environment variables:
-- Initial admin user and password
-- Organization name
-- Bucket for time-series data
-- API token for authentication
-
-Edit `.env` to change values.
-
-### Telegraf Configuration
-- **Main config:** `telegraf.conf` — Agent settings and InfluxDB output
-- **Input plugins:** `docsis_cm.conf` — SNMP configuration
-   - Agent IP: `192.0.2.11:161` (example; replace with your modem IP)
-  - Community: `public`
-  - Polling interval: 30 seconds
-
-#### SNMP OIDs Tracked
-
-| Metric | OID | Unit |
-|--------|-----|------|
-| Interface traffic (octets/packets) | IF-MIB (1.3.6.1.2.1.31.*) | bytes/packets |
-| DS RF power | 1.3.6.1.2.1.10.127.1.1.1.6 | dBmV |
-| DS SNR/MER | 1.3.6.1.2.1.10.127.1.1.4.1.5 | dB |
-| US tx power | 1.3.6.1.2.1.10.127.1.2.2.1.3 | dBmV |
-| OFDM downstream MER | 1.3.6.1.2.1.10.166.3.1.1.4 | dB (÷10 on conversion) |
-| OFDMA upstream tx power | 1.3.6.1.2.1.10.166.3.2.1.3 | dBmV (÷10 on conversion) |
-
-### Starlark Processors
-Two processors convert scaled OID values:
-- `ds_ofdm_mer_x10` → `ds_ofdm_mer_db` (divide by 10)
-- `us_ofdma_txpower_x10` → `us_ofdma_txpower_dbmv` (divide by 10)
-
-## Usage
-
-### View Metrics in InfluxDB UI
-
-1. Go to http://localhost:8086
-2. **Explore** tab → Select bucket `docsis`
-3. Select measurement (e.g., `docsIfDownChannel`)
-4. Select fields and apply filters
-
-### Manage Containers
+1. Luo ympäristömuuttujatiedosto:
 
 ```bash
-# View running containers
+cp .env.example .env
+```
+
+2. Täytä vähintään nämä arvot tiedostoon `.env`:
+
+- `INFLUXDB_ADMIN_USER`
+- `INFLUXDB_ADMIN_PASSWORD`
+- `INFLUXDB_ORG`
+- `INFLUXDB_BUCKET`
+- `INFLUXDB_TOKEN`
+
+3. Käynnistä palvelut:
+
+```bash
+docker compose up -d
+```
+
+4. Avaa InfluxDB UI:
+
+- URL: http://localhost:8086
+
+## Konfiguraatiorakenne
+
+- `telegraf.conf`
+   - agentin yleiset asetukset
+   - `outputs.influxdb_v2` (lukee arvot env-muuttujista)
+
+- `telegraf.d/`
+   - aktiiviset input-konfiguraatiot, jotka Telegraf lataa automaattisesti
+   - tällä hetkellä mukana `vdm_restapi.conf`
+
+- juurihakemiston mallit:
+   - `docsis_cm.conf`
+   - `telegraf_cm_six_modems.conf`
+   - `teleste_amp.conf`
+
+Huomio: juurihakemiston SNMP-konffeja ei lueta automaattisesti ennen kuin ne kopioidaan hakemistoon `telegraf.d/`.
+
+## SNMP-konffin käyttöönotto
+
+Esimerkki DOCSIS-konffin aktivoinnista:
+
+```bash
+cp docsis_cm.conf telegraf.d/docsis_cm.conf
+docker compose restart telegraf
+```
+
+Vaihtoehtoisesti voit aktivoida useamman laitteen mallin:
+
+```bash
+cp telegraf_cm_six_modems.conf telegraf.d/docsis_multi.conf
+docker compose restart telegraf
+```
+
+Teleste SNMP -malli:
+
+```bash
+cp teleste_amp.conf telegraf.d/teleste_amp.conf
+docker compose restart telegraf
+```
+
+## VDM REST API -keruu
+
+Tiedosto `telegraf.d/vdm_restapi.conf` sisältää kaksi `inputs.http`-inputia:
+
+- `vdm_xp_state`
+- `vdm_manager_state`
+
+Tarkista ennen tuotantokäyttöä:
+
+- URL-osoitteet
+- Bearer-token
+- TLS-asetus (`insecure_skip_verify`)
+
+## Yleisimmät komennot
+
+```bash
+# palveluiden tila
 docker compose ps
 
-# Stop everything
-docker compose down
+# lokit
+docker logs -f telegraf
+docker logs -f influxdb
 
-# Remove all data (volumes)
-docker compose down -v
-
-# Restart Telegraf
+# uudelleenkäynnistys
 docker compose restart telegraf
 
-# View Telegraf logs
-docker logs telegraf
+# pysäytys
+docker compose down
 
-# View InfluxDB logs
-docker logs influxdb
+# pysäytys + datavolyymien poisto
+docker compose down -v
 ```
 
-### Query Data with CLI
+## Analyysityökalut
 
-```bash
-# List buckets
-docker exec influxdb influx bucket list --token $INFLUXDB_TOKEN --org docsis
+Hakemistossa `tools/` on kaksi skriptiä:
 
-# Query data (example)
-docker exec influxdb influx query \
-  'from(bucket:"docsis") |> range(start: -1h) |> filter(fn: (r) => r._measurement == "docsIfDownChannel")'
-```
+- `influx_analyzer.py`
+   - kevyempi poikkeama- ja counter-reset-analyysi
+- `influx_analyzer_deep.py`
+   - syvempi analyysi: kausivaihtelu, changepoint, stale-data, incident-severity
 
-## Troubleshooting
+Tarkemmat käyttöohjeet:
 
-### Telegraf exits with code 1
+- `tools/README_influx_analyzer.md`
+- `tools/README_influx_analyzer_deep.md`
 
-**"error parsing data TOML syntax"**
-- Check `docsis_cm.conf` for syntax errors
-- Ensure all `[[inputs.snmp.table]]` sections are valid
+## Grafana
 
-**"Cannot find module / Unknown Object Identifier"**
-- SNMP MIBs are missing in container
-- Solution: Remove `oid = "..."` from `[[inputs.snmp.table]]` blocks (already done in this config)
-- Individual field `oid` values are still used
+Hakemistossa `grafana/` on importoitava dashboard:
 
-**"Connection refused"**
-- Cable modem IP/port unreachable
-- Check: `ping <MODEM_IP>` and `snmpwalk -v 2c -c <COMMUNITY> <MODEM_IP> .1`
+- `grafana/teleste_amp_existing_data_dashboard.json`
 
-### InfluxDB exits with code 2
+Ohjeet löytyvät tiedostosta:
 
-**Initialization failure**
-- `.env` variables contain invalid characters
-- Check volume permissions: `docker volume ls`
-- Reset: `docker compose down -v && docker compose up`
+- `grafana/README_Teleste_AMP_existing_data.md`
 
-### No data in InfluxDB
+## Tietoturvahuomiot
 
-1. Verify Telegraf is running: `docker logs telegraf`
-2. Check InfluxDB token matches in `.env`
-3. Verify network connectivity to modem
+- Älä tallenna oikeita salasanoja tai tokeneita versionhallintaan.
+- Vaihda oletusarvot (`public`, esimerkkisalasanat, placeholder-tokenit) aina ennen tuotantoa.
+- Suosi SNMPv3:a, jos laitteet tukevat sitä.
+- `insecure_skip_verify = true` kannattaa poistaa, jos käytössä on luotettu TLS-sertifikaatti.
 
-## Environment Variables
+## Nykyinen hakemistorakenne (pääosiot)
 
-```bash
-# InfluxDB Admin (for initial setup)
-INFLUXDB_ADMIN_USER=admin
-INFLUXDB_ADMIN_PASSWORD=change-me-strong-password
-
-# InfluxDB Organization & Bucket
-INFLUXDB_ORG=docsis
-INFLUXDB_BUCKET=docsis
-
-# API Token (used by Telegraf)
-INFLUXDB_TOKEN=replace-with-long-random-token
-```
-
-**⚠️ Change these in production!** Use strong passwords and secure token generation.
-
-## File Structure
-
-```
+```text
 .
-├── docker-compose.yml      # Service definitions
-├── telegraf.conf           # Telegraf agent config & InfluxDB output
-├── docsis_cm.conf          # SNMP input plugin & processors
-├── .env                    # Environment variables (gitignored)
-├── .gitignore              # Git exclude patterns
-└── README.md               # This file
+├── docker-compose.yml
+├── telegraf.conf
+├── telegraf.d/
+├── docsis_cm.conf
+├── telegraf_cm_six_modems.conf
+├── teleste_amp.conf
+├── tools/
+├── grafana/
+├── Teleste/
+├── .env.example
+└── README.md
 ```
 
-## License
+## Vianhaku
 
-[Your License Here]
+- Telegraf ei käynnisty:
+   - tarkista TOML-syntaksi konffeista
+   - tarkista että tiedosto on hakemistossa `telegraf.d/`
 
-## Support
+- Ei dataa InfluxDB:ssä:
+   - varmista että `INFLUXDB_TOKEN`, `INFLUXDB_ORG` ja `INFLUXDB_BUCKET` täsmäävät
+   - varmista laitteiden verkko- ja SNMP/HTTP-yhteys
+   - tarkista Telegrafin loki
 
-For issues:
-1. Check logs: `docker logs <service>`
-2. Verify `.env` configuration
-3. Test SNMP connectivity: `snmpwalk -v 2c -c public <ip> .1.3.6.1.2.1.1`
+- InfluxDB setup epäonnistuu:
+   - tarkista `.env`-arvot
+   - tarvittaessa resetoi volyymit `docker compose down -v`
